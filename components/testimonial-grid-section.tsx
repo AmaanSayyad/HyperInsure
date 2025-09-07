@@ -3,63 +3,71 @@ import Image from "next/image"
 const testimonials = [
   {
     quote:
-      "The real-time code suggestions from Pointer feel like having a senior engineer reviewing every line of code as you write. The accuracy of its recommendations has improved our overall code quality, reduced review time.",
+      "HyperInsure's transaction delay coverage has been a game-changer for our DeFi platform. Their instant payouts when transactions get stuck have saved our users from significant losses during high congestion periods.",
     name: "Annette Black",
-    company: "Sony",
+    company: "BlockFi",
     avatar: "/images/avatars/annette-black.png",
     type: "large-teal",
   },
   {
     quote:
-      "Integrating Pointer into our stack was smooth, and the MCP server connections saved us days of configuration work",
+      "Integrating HyperInsure into our wallet was seamless, and their STX reserves ensured our users always received timely compensation for delayed transactions.",
     name: "Dianne Russell",
-    company: "McDonald's",
+    company: "Coinbase",
     avatar: "/images/avatars/dianne-russell.png",
     type: "small-dark",
   },
   {
     quote:
-      "Pointer’s multi-agent coding feature has been a game changer. We’re fixing complex bugs in hours instead of spending entire sprints on them.",
+      "HyperInsure's Clarity smart contracts are truly impressive. The deterministic, auditable insurance logic gives us complete confidence in the fairness of claim processing.",
     name: "Cameron Williamson",
-    company: "IBM",
+    company: "Stacks Foundation",
     avatar: "/images/avatars/cameron-williamson.png",
     type: "small-dark",
   },
   {
     quote:
-      "We no longer juggle multiple tools. Pointer brought all our integrations together in one place, which simplified our entire workflow.",
+      "We no longer worry about mempool congestion affecting our users. HyperInsure's protection has significantly improved our customer satisfaction during network stress periods.",
     name: "Robert Fox",
-    company: "MasterCard",
+    company: "BitPay",
     avatar: "/images/avatars/robert-fox.png",
     type: "small-dark",
   },
   {
     quote:
-      "We started with the free plan just to test it out, but within a week we upgraded to Pro. Now, we can’t imagine coding without it",
+      "We started with the Basic plan just to test it out, but within a week we upgraded to Premium. Now, we can't imagine operating without HyperInsure's protection.",
     name: "Darlene Robertson",
-    company: "Ferrari",
+    company: "Binance",
     avatar: "/images/avatars/darlene-robertson.png",
     type: "small-dark",
   },
   {
     quote:
-      "Collaborative coding feels effortless now. With Pointer’s real-time previews, pair programming has become faster and more productive.",
+      "Transaction delays are now a non-issue for our exchange. With HyperInsure's coverage, our users feel confident even during periods of high market volatility.",
     name: "Cody Fisher",
-    company: "Apple",
+    company: "Kraken",
     avatar: "/images/avatars/cody-fisher.png",
     type: "small-dark",
   },
   {
     quote:
-      "Deploying on Vercel with Pointer was not just simple, it felt seamless. We went from coding to seeing our changes live in minutes without worrying about build pipelines or configuration issues.",
+      "Implementing HyperInsure was not just simple, it felt seamless. Their non-intrusive approach meant we didn't need to modify our existing transaction flow at all, yet our users gained complete protection against delays.",
     name: "Albert Flores",
-    company: "Louis Vuitton",
+    company: "Ledger",
     avatar: "/images/avatars/albert-flores.png",
     type: "large-light",
   },
 ]
 
-const TestimonialCard = ({ quote, name, company, avatar, type }) => {
+type TestimonialCardProps = {
+  quote: string
+  name: string
+  company: string
+  avatar: string
+  type: string
+}
+
+const TestimonialCard = ({ quote, name, company, avatar, type }: TestimonialCardProps) => {
   const isLargeCard = type.startsWith("large")
   const avatarSize = isLargeCard ? 48 : 36
   const avatarBorderRadius = isLargeCard ? "rounded-[41px]" : "rounded-[30.75px]"
@@ -133,11 +141,11 @@ export function TestimonialGridSection() {
       <div className="self-stretch py-6 md:py-8 lg:py-14 flex flex-col justify-center items-center gap-2">
         <div className="flex flex-col justify-start items-center gap-4">
           <h2 className="text-center text-foreground text-3xl md:text-4xl lg:text-[40px] font-semibold leading-tight md:leading-tight lg:leading-[40px]">
-            Coding made effortless
+            Transaction Protection That Works
           </h2>
           <p className="self-stretch text-center text-muted-foreground text-sm md:text-sm lg:text-base font-medium leading-[18.20px] md:leading-relaxed lg:leading-relaxed">
-            {"Hear how developers ship products faster, collaborate seamlessly,"} <br />{" "}
-            {"and build with confidence using Pointer's powerful AI tools"}
+            {"Hear how blockchain platforms protect their users from transaction delays,"} <br />{" "}
+            {"reduce financial losses, and build confidence using HyperInsure's on-chain insurance"}
           </p>
         </div>
       </div>

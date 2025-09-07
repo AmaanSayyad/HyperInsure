@@ -6,34 +6,34 @@ import { ChevronDown } from "lucide-react"
 
 const faqData = [
   {
-    question: "What is Pointer and who is it for?",
+    question: "What is HyperInsure and who is it for?",
     answer:
-      "Pointer is an AI-powered development platform designed for developers, teams, and organizations who want toaccelerate their coding workflow. It's perfect for both individual developers looking to enhance their productivity and teams seeking seamless collaboration tools.",
+      "⚡HyperInsure is the first on-chain insurance protocol protecting blockchain users from transaction latency, mempool congestion and finality delays. It's for anyone using blockchain transactions who wants protection against delays that can cause inconvenience and financial loss.",
   },
   {
-    question: "How does Pointer's AI code review work?",
+    question: "What problems does HyperInsure solve?",
     answer:
-      "Our AI analyzes your code in real-time, providing intelligent suggestions for improvements, catching potential bugs, and ensuring best practices. It learns from your coding patterns and adapts to your team's standards, making code reviews faster and more consistent.",
+      "HyperInsure addresses several critical issues: pending transactions stuck in mempools, volatile fee markets, uncertainty in block inclusion, finality risks across congested networks, and transactions that may be 'quarantined' by chains like Zircuit.",
   },
   {
-    question: "Can I integrate Pointer with my existing tools?",
+    question: "How does HyperInsure work?",
     answer:
-      "Yes! Pointer offers one-click integrations with popular development tools including GitHub, GitLab, VS Code, Slack, and many more. Our MCP connectivity allows you to easily manage and configure server access across your entire development stack.",
+      "Users purchase coverage using STX tokens. Our RPC proxy API records broadcast height at submission. Once a transaction is included, an oracle signs an attestation of the broadcast → inclusion delay. Smart contracts written in Clarity verify these proofs and release payouts if the delay exceeds the threshold.",
   },
   {
-    question: "What's included in the free plan?",
+    question: "What makes HyperInsure non-intrusive?",
     answer:
-      "The free plan includes real-time code suggestions, basic integrations, single MCP server connection, up to 2 AI coding agents, and Vercel deployments with Pointer branding. It's perfect for individual developers getting started.",
+      "HyperInsure requires no additional parameters, code modifications, or complex application processes. It works alongside existing transactions without changing how they function, making it simple to integrate into any blockchain workflow.",
   },
   {
-    question: "How do parallel coding agents work?",
+    question: "What technology powers HyperInsure?",
     answer:
-      "Our parallel coding agents can work on different parts of your codebase simultaneously, solving complex problems faster than traditional single-threaded approaches. You can launch multiple agents to handle different tasks like bug fixes, feature development, and code optimization concurrently.",
+      "HyperInsure is built on key technical primitives: Clarity smart contracts for deterministic, auditable insurance logic; burn block heights for objective time measurement via Bitcoin anchoring; secp256k1-signed oracle attestations validated on-chain; and STX reserves for instant payouts.",
   },
   {
-    question: "Is my code secure with Pointer?",
+    question: "What future insurance products will HyperInsure offer?",
     answer:
-      "Absolutely. We use enterprise-grade security measures including end-to-end encryption, secure data transmission, and compliance with industry standards. Your code never leaves your secure environment without your explicit permission, and we offer on-premises deployment options for enterprise customers.",
+      "We plan to extend to many types of blockchain insurance, including wallet theft protection via Arkham, transaction failure coverage, gas-spike hedging, validator risk coverage, and cross-chain finality protection.",
   },
 ]
 
@@ -99,7 +99,7 @@ export function FAQSection() {
             Frequently Asked Questions
           </h2>
           <p className="self-stretch text-center text-muted-foreground text-sm font-medium leading-[18.20px] break-words">
-            Everything you need to know about Pointer and how it can transform your development workflow
+            Everything you need to know about HyperInsure and how it protects your blockchain transactions
           </p>
         </div>
       </div>

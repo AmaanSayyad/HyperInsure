@@ -36,33 +36,33 @@ const BentoCard = ({ title, description, Component }) => (
 export function BentoSection() {
   const cards = [
     {
-      title: "AI-powered code reviews.",
-      description: "Get real-time, smart suggestions for cleaner code.",
+      title: "Purchase Coverage with STX",
+      description: "Users purchase insurance coverage using Stacks (STX) tokens.",
       Component: AiCodeReviews,
     },
     {
-      title: "Real-time coding previews",
-      description: "Chat, collaborate, and instantly preview changes together.",
+      title: "RPC Proxy API",
+      description: "Our RPC proxy records broadcast height at transaction submission.",
       Component: RealtimeCodingPreviews,
     },
     {
-      title: "One-click integrations",
-      description: "Easily connect your workflow with popular dev tools.",
+      title: "Oracle Attestation",
+      description: "Once included, an oracle signs an attestation of broadcast → inclusion delay.",
       Component: OneClickIntegrationsIllustration,
     },
     {
-      title: "Flexible MCP connectivity",
-      description: "Effortlessly manage and configure MCP server access.",
-      Component: MCPConnectivityIllustration, // Updated component
+      title: "Smart Contract Verification",
+      description: "Clarity smart contracts verify proofs and release payouts if delay ≥ threshold.",
+      Component: MCPConnectivityIllustration,
     },
     {
-      title: "Launch parallel coding agents", // Swapped position
-      description: "Solve complex problems faster with multiple AI agents.",
-      Component: ParallelCodingAgents, // Updated component
+      title: "Bitcoin Security",
+      description: "Burn block heights provide objective measurement of time via Bitcoin anchoring.",
+      Component: ParallelCodingAgents,
     },
     {
-      title: "Deployment made easy", // Swapped position
-      description: "Go from code to live deployment on Vercel instantly.",
+      title: "Instant Payouts",
+      description: "STX reserves provide capital pool for instant insurance payouts.",
       Component: EasyDeployment,
     },
   ]
@@ -74,11 +74,10 @@ export function BentoSection() {
         <div className="self-stretch py-8 md:py-14 flex flex-col justify-center items-center gap-2 z-10">
           <div className="flex flex-col justify-start items-center gap-4">
             <h2 className="w-full max-w-[655px] text-center text-foreground text-4xl md:text-6xl font-semibold leading-tight md:leading-[66px]">
-              Empower Your Workflow with AI
+              ⚡How HyperInsure Works
             </h2>
             <p className="w-full max-w-[600px] text-center text-muted-foreground text-lg md:text-xl font-medium leading-relaxed">
-              Ask your AI Agent for real-time collaboration, seamless integrations, and actionable insights to
-              streamline your operations.
+              Protecting blockchain users from transaction latency, mempool congestion and finality delays with on-chain insurance
             </p>
           </div>
         </div>

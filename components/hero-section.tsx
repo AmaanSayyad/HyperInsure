@@ -439,16 +439,16 @@ export function HeroSection() {
 
       <div className="relative z-10 space-y-4 md:space-y-5 lg:space-y-6 mb-6 md:mb-7 lg:mb-9 max-w-md md:max-w-[500px] lg:max-w-[588px] mt-16 md:mt-[120px] lg:mt-[160px] px-4">
         <h1 className="text-foreground text-3xl md:text-4xl lg:text-6xl font-semibold leading-tight">
-          Unleash the Power of AI Agents
+          ⚡HyperInsure
         </h1>
         <p className="text-muted-foreground text-base md:text-base lg:text-lg font-medium leading-relaxed max-w-lg mx-auto">
-          Accelerate your development workflow with intelligent AI agents that write, review, and optimize your code.
+          The first on-chain insurance protocol protecting blockchain users from transaction latency, mempool congestion and finality delays, powered by Stacks + Bitcoin security.
         </p>
       </div>
 
-      <Link href="https://vercel.com/home" target="_blank" rel="noopener noreferrer">
+      <Link href="#" target="_blank" rel="noopener noreferrer">
         <Button className="relative z-10 bg-secondary text-secondary-foreground hover:bg-secondary/90 px-8 py-3 rounded-full font-medium text-base shadow-lg ring-1 ring-white/10">
-          Signup for free
+          Get Insurance Coverage
         </Button>
       </Link>
     </section>

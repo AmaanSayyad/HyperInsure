@@ -6,20 +6,36 @@ import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { Menu } from "lucide-react"
 import Link from "next/link" // Import Link for client-side navigation
+import StacksWalletConnect from "./stackswalletcontext"
 
 export function Header() {
-  const navItems = [
-    { name: "Features", href: "#features-section" },
-    { name: "Pricing", href: "#pricing-section" },
-    { name: "Testimonials", href: "#testimonials-section" }, // Changed from Docs to Testimonials
+  const landingNavItems = [
+    { name: "How It Works", href: "#features-section" },
+    { name: "Insurance Plans", href: "#pricing-section" },
+    { name: "Testimonials", href: "#testimonials-section" },
+    { name: "FAQ", href: "#faq-section" },
   ]
+  
+  const appNavItems = [
+    { name: "Policies", href: "/policies" },
+    { name: "Purchase", href: "/purchase" },
+    { name: "Claim", href: "/claim" },
+    { name: "Admin", href: "/admin" },
+  ]
+  
+  // Determine if we're on the landing page or app pages
+  const isLandingPage = typeof window !== "undefined" && window.location.pathname === "/"
+  const navItems = isLandingPage ? landingNavItems : appNavItems
 
   const handleScroll = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
-    e.preventDefault()
-    const targetId = href.substring(1) // Remove '#' from href
-    const targetElement = document.getElementById(targetId)
-    if (targetElement) {
-      targetElement.scrollIntoView({ behavior: "smooth" })
+    // Only apply smooth scrolling to landing page section links (starting with #)
+    if (href.startsWith('#')) {
+      e.preventDefault()
+      const targetId = href.substring(1) // Remove '#' from href
+      const targetElement = document.getElementById(targetId)
+      if (targetElement) {
+        targetElement.scrollIntoView({ behavior: "smooth" })
+      }
     }
   }
 
@@ -28,7 +44,9 @@ export function Header() {
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-3">
-            <span className="text-foreground text-xl font-semibold">Pointer</span>
+            <Link href="/" className="text-foreground text-xl font-semibold hover:text-primary transition-colors">
+              ⚡HyperInsure
+            </Link>
           </div>
           <nav className="hidden md:flex items-center gap-2">
             {navItems.map((item) => (
@@ -44,10 +62,14 @@ export function Header() {
           </nav>
         </div>
         <div className="flex items-center gap-4">
-          <Link href="https://vercel.com/home" target="_blank" rel="noopener noreferrer" className="hidden md:block">
-            <Button className="bg-secondary text-secondary-foreground hover:bg-secondary/90 px-6 py-2 rounded-full font-medium shadow-sm">
-              Try for Free
-            </Button>
+          <Link href="/purchase" className="hidden md:block">
+          <StacksWalletConnect
+              variant="default"
+              size="sm"
+              className="bg-orange-500 hover:bg-orange-600 text-white text-xs"
+              showAddress={true}
+            />
+          
           </Link>
           <Sheet>
             <SheetTrigger asChild className="md:hidden">
@@ -71,9 +93,9 @@ export function Header() {
                     {item.name}
                   </Link>
                 ))}
-                <Link href="https://vercel.com/home" target="_blank" rel="noopener noreferrer" className="w-full mt-4">
+                <Link href="/purchase" className="w-full mt-4">
                   <Button className="bg-secondary text-secondary-foreground hover:bg-secondary/90 px-6 py-2 rounded-full font-medium shadow-sm">
-                    Try for Free
+                    Get Coverage
                   </Button>
                 </Link>
               </nav>
