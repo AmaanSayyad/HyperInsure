@@ -20,6 +20,7 @@ export function Header() {
     { name: "Policies", href: "/policies" },
     { name: "Purchase", href: "/purchase" },
     { name: "Claim", href: "/claim" },
+    { name: "Verify", href: "/verify" },
     { name: "Admin", href: "/admin" },
   ]
   
