@@ -4,7 +4,7 @@ This directory contains the Clarity smart contracts that power the HyperInsure p
 
 ## Contract Architecture
 
-HyperInsure is built using a streamlined contract architecture with just three core contracts:
+HyperInsure is built using a streamlined contract architecture with four core contracts:
 
 ### 1. Core Contract (`hyperinsure-core.clar`)
 
@@ -45,6 +45,30 @@ Key functions:
 - `vote`: Allows voting on proposals
 - `execute-proposal`: Executes approved proposals
 
+### 4. Insurance Treasury Contract (`insurance-treasury.clar`)
+
+Manages the collection of premiums and payment of claims with a dedicated treasury.
+
+Key functions:
+- **Treasury Management**
+  - `get-treasury-balance`: Returns the current treasury balance
+  - `withdraw-fees`: Allows admin to withdraw collected fees
+  
+- **Policy Management**
+  - `create-policy`: Creates a new insurance policy with specified parameters
+  - `toggle-policy`: Activates or deactivates policies
+  - `get-policy`: Retrieves policy details
+  
+- **Insurance Operations**
+  - `purchase-insurance`: Allows users to purchase coverage by paying premiums
+  - `submit-claim`: Processes claims for delayed transactions
+  - `process-claim`: Handles the payout for valid claims
+  
+- **Admin Controls**
+  - `set-admin`: Updates the admin address
+  - `set-min-delay-blocks`: Sets the minimum delay threshold
+  - `set-claim-fee`: Updates the fee taken from claim payouts
+
 ## How It Works
 
 1. **Policy Creation**: Admins create insurance policies with specific parameters (delay threshold, premium percentage, protocol fee, payout amount).
@@ -61,15 +85,15 @@ Key functions:
 
 ## Benefits of This Architecture
 
-1. **Gas Efficiency**: Fewer contracts mean lower deployment and execution costs
+1. **Modular Design**: Separation of concerns between core logic, oracle functions, governance, and treasury management
 
-2. **Simplified Integration**: Frontend components can interact with fewer contracts
+2. **Specialized Functionality**: Each contract focuses on a specific aspect of the protocol
 
-3. **Reduced Complexity**: Fewer cross-contract calls reduce potential points of failure
+3. **Flexible Integration**: Frontend components can interact with the appropriate contracts based on functionality
 
-4. **Easier Maintenance**: Consolidated functionality makes updates and bug fixes simpler
+4. **Enhanced Security**: Dedicated treasury contract provides additional protection for user funds
 
-5. **Better Security**: Smaller attack surface with fewer contracts to audit
+5. **Clear Responsibility**: Each contract has well-defined responsibilities and interfaces
 
 ## Error Codes
 
@@ -89,10 +113,10 @@ Each contract uses standardized error codes:
 ## Integration with Frontend
 
 The frontend interacts with these contracts through the following components:
-1. The Policy page displays available policies from the core contract
-2. The Purchase page allows users to buy coverage through the core contract
-3. The Claim page submits claims through the core contract
-4. The Admin page creates policies and manages protocol parameters
+1. The Policy page displays available policies from the core and treasury contracts
+2. The Purchase page allows users to buy coverage through the treasury contract
+3. The Claim page submits claims through the treasury contract
+4. The Admin page creates policies and manages protocol parameters through both core and treasury contracts
 
 ## Development and Deployment
 
