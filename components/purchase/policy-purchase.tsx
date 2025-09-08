@@ -23,7 +23,7 @@ const availablePolicies = [
   },
   {
     id: "POL-002",
-    name: "Premium Delay Protection",
+    name: "Premium Delay Protection", 
     description: "Enhanced coverage for high-value transactions with higher payouts.",
     delayThreshold: 30,
     premiumPercentage: 300, // 3%
@@ -46,10 +46,15 @@ const availablePolicies = [
 export function PolicyPurchase() {
   const [selectedPolicy, setSelectedPolicy] = useState(null)
   const [stxAmount, setStxAmount] = useState("")
+  const [showClaimForm, setShowClaimForm] = useState(false)
+  const [purchaseId, setPurchaseId] = useState("")
+  const [transactionHash, setTransactionHash] = useState("")
+  const [blockHeight, setBlockHeight] = useState("")
 
   const handlePolicySelect = (policy) => {
     setSelectedPolicy(policy)
     setStxAmount("")
+    setShowClaimForm(false)
   }
 
   const handlePurchase = (e) => {
@@ -71,9 +76,37 @@ export function PolicyPurchase() {
       description: `You've purchased ${selectedPolicy.name} coverage for ${stxAmount} STX.`,
     })
     
-    // Reset form
-    setSelectedPolicy(null)
-    setStxAmount("")
+    // Generate a random purchase ID
+    const randomId = `PURCHASE-${Math.random().toString(36).substring(2, 10).toUpperCase()}`
+    setPurchaseId(randomId)
+    
+    // Show claim form instead of resetting
+    setShowClaimForm(true)
+  }
+  
+  const handleClaim = (e) => {
+    e.preventDefault()
+    
+    if (!transactionHash || !blockHeight) {
+      toast.error("Please enter both transaction hash and block height")
+      return
+    }
+    
+    // Here you would typically send the claim request to your backend
+    console.log("Claim submitted:", {
+      purchaseId,
+      transactionHash,
+      blockHeight,
+    })
+    
+    // Ensure we're using the toast correctly
+    setTimeout(() => {
+      // Show notification that transaction is not delayed
+      toast.error("Transaction is not delayed, unable to claim", {
+        description: "The transaction has not experienced sufficient delay to qualify for a claim.",
+        duration: 5000, // Show for 5 seconds
+      })
+    }, 100)
   }
 
   return (
@@ -149,7 +182,7 @@ export function PolicyPurchase() {
         ))}
       </div>
 
-      {selectedPolicy && (
+      {selectedPolicy && !showClaimForm && (
         <Card className="mt-8 overflow-hidden rounded-2xl border border-white/20">
           {/* Background with blur effect similar to homepage */}
           <div
@@ -215,6 +248,88 @@ export function PolicyPurchase() {
                 className="w-full bg-secondary text-secondary-foreground hover:bg-secondary/90 px-8 py-3 rounded-full font-medium text-base shadow-lg ring-1 ring-white/10"
               >
                 Purchase Insurance
+              </Button>
+            </CardFooter>
+          </form>
+        </Card>
+      )}
+      
+      {showClaimForm && (
+        <Card className="mt-8 overflow-hidden rounded-2xl border border-white/20">
+          {/* Background with blur effect similar to homepage */}
+          <div
+            className="absolute inset-0 rounded-2xl"
+            style={{
+              background: "rgba(231, 236, 235, 0.08)",
+              backdropFilter: "blur(4px)",
+              WebkitBackdropFilter: "blur(4px)",
+            }}
+          />
+          {/* Additional subtle gradient overlay */}
+          <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent rounded-2xl" />
+          
+          <CardHeader className="relative z-10">
+            <CardTitle className="text-foreground text-xl font-semibold">Submit Insurance Claim</CardTitle>
+            <CardDescription className="text-muted-foreground">
+              Enter your transaction details to claim insurance
+            </CardDescription>
+          </CardHeader>
+          <form onSubmit={handleClaim}>
+            <CardContent className="relative z-10">
+              <div className="space-y-4">
+                <div className="rounded-xl border border-white/10 p-4 space-y-2 bg-white/5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Policy:</span>
+                    <span className="font-medium text-foreground">{selectedPolicy.name}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Purchase ID:</span>
+                    <span className="font-medium text-foreground">{purchaseId}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Insured Amount:</span>
+                    <span className="font-medium text-foreground">{stxAmount} STX</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Potential Payout:</span>
+                    <span className="font-medium text-foreground">{selectedPolicy.payoutPerIncident} STX</span>
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="transactionHash" className="text-foreground">Transaction Hash</Label>
+                  <Input
+                    id="transactionHash"
+                    placeholder="Enter transaction hash"
+                    value={transactionHash}
+                    onChange={(e) => setTransactionHash(e.target.value)}
+                    className="border-white/10 bg-white/5 focus-visible:ring-primary focus-visible:border-primary"
+                    required
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="blockHeight" className="text-foreground">Block Height</Label>
+                  <Input
+                    id="blockHeight"
+                    type="number"
+                    placeholder="Enter block height"
+                    value={blockHeight}
+                    onChange={(e) => setBlockHeight(e.target.value)}
+                    min="1"
+                    step="1"
+                    className="border-white/10 bg-white/5 focus-visible:ring-primary focus-visible:border-primary"
+                    required
+                  />
+                </div>
+              </div>
+            </CardContent>
+            <CardFooter className="relative z-10">
+              <Button 
+                type="submit" 
+                className="w-full bg-secondary text-secondary-foreground hover:bg-secondary/90 px-8 py-3 rounded-full font-medium text-base shadow-lg ring-1 ring-white/10"
+              >
+                Submit Claim
               </Button>
             </CardFooter>
           </form>

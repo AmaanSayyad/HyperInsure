@@ -8,9 +8,9 @@ export function FooterSection() {
       {/* Left Section: Logo, Description, Social Links */}
       <div className="flex flex-col justify-start items-start gap-8 p-4 md:p-8">
         <div className="flex gap-3 items-stretch justify-center">
-          <div className="text-center text-foreground text-xl font-semibold leading-4">Pointer</div>
+          <div className="text-center text-foreground text-xl font-semibold leading-4">⚡ HyperInsure</div>
         </div>
-        <p className="text-foreground/90 text-sm font-medium leading-[18px] text-left">Coding made effortless</p>
+        <p className="text-foreground/90 text-sm font-medium leading-[18px] text-left">Decentralized insurance for blockchain transactions</p>
         <div className="flex justify-start items-start gap-3">
           <a href="#" aria-label="Twitter" className="w-4 h-4 flex items-center justify-center">
             <Twitter className="w-full h-full text-muted-foreground" />
@@ -23,25 +23,22 @@ export function FooterSection() {
           </a>
         </div>
       </div>
-      {/* Right Section: Product, Company, Resources */}
+      {/* Right Section: Insurance, Company, Resources */}
       <div className="grid grid-cols-2 md:grid-cols-3 gap-8 md:gap-12 p-4 md:p-8 w-full md:w-auto">
         <div className="flex flex-col justify-start items-start gap-3">
-          <h3 className="text-muted-foreground text-sm font-medium leading-5">Product</h3>
-          <div className="flex flex-col justify-end items-start gap-2">
-            <a href="#" className="text-foreground text-sm font-normal leading-5 hover:underline">
-              Features
+          <h3 className="text-muted-foreground text-sm font-medium leading-5">Insurance</h3>
+          <div className="flex flex-col justify-center items-start gap-2">
+            <a href="/policies" className="text-foreground text-sm font-normal leading-5 hover:underline">
+              View Policies
+            </a>
+            <a href="/purchase" className="text-foreground text-sm font-normal leading-5 hover:underline">
+              Buy Insurance
+            </a>
+            <a href="/claim" className="text-foreground text-sm font-normal leading-5 hover:underline">
+              File Claim
             </a>
             <a href="#" className="text-foreground text-sm font-normal leading-5 hover:underline">
-              Pricing
-            </a>
-            <a href="#" className="text-foreground text-sm font-normal leading-5 hover:underline">
-              Integrations
-            </a>
-            <a href="#" className="text-foreground text-sm font-normal leading-5 hover:underline">
-              Real-time Previews
-            </a>
-            <a href="#" className="text-foreground text-sm font-normal leading-5 hover:underline">
-              Multi-Agent Coding
+              Coverage Types
             </a>
           </div>
         </div>
@@ -58,9 +55,6 @@ export function FooterSection() {
               Careers
             </a>
             <a href="#" className="text-foreground text-sm font-normal leading-5 hover:underline">
-              Brand
-            </a>
-            <a href="#" className="text-foreground text-sm font-normal leading-5 hover:underline">
               Contact
             </a>
           </div>
@@ -69,16 +63,16 @@ export function FooterSection() {
           <h3 className="text-muted-foreground text-sm font-medium leading-5">Resources</h3>
           <div className="flex flex-col justify-center items-start gap-2">
             <a href="#" className="text-foreground text-sm font-normal leading-5 hover:underline">
-              Terms of use
+              Terms of Service
             </a>
             <a href="#" className="text-foreground text-sm font-normal leading-5 hover:underline">
-              API Reference
+              Privacy Policy
             </a>
             <a href="#" className="text-foreground text-sm font-normal leading-5 hover:underline">
               Documentation
             </a>
             <a href="#" className="text-foreground text-sm font-normal leading-5 hover:underline">
-              Community
+              Help Center
             </a>
             <a href="#" className="text-foreground text-sm font-normal leading-5 hover:underline">
               Support

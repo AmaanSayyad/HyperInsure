@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { GeistSans } from 'geist/font/sans'
 import { GeistMono } from 'geist/font/mono'
 import { Analytics } from '@vercel/analytics/next'
+import { Toaster } from 'sonner'
 import './globals.css'
 import { StacksWalletProvider } from '@/components/stackswalletconnect'
 
@@ -29,9 +30,9 @@ html {
       </head>
       <body>
         <StacksWalletProvider>
-
         {children}
         <Analytics />
+        <Toaster position="top-center" richColors />
         </StacksWalletProvider>
       </body>
     </html>
