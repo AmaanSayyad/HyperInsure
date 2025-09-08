@@ -25,7 +25,133 @@ HyperInsure provides non-intrusive, verifiable insurance coverage for risks asso
 3. **Oracle Attestation**: Once included, an oracle signs an attestation of broadcast → inclusion delay
 4. **Smart Contract Verification**: Clarity smart contracts verify proofs and release payouts if delay ≥ threshold
 
-## Smart Contract Architecture
+## Smart Contract Architecture EVM vs Stacks
+
+### Interaction Diagrams
+
+#### 1. EVM Tech Architecture vs Stacks Insurance Policy Purchase Flow
+
+```mermaid
+sequenceDiagram
+    participant Admin
+    participant User
+    participant UI
+    participant Insurance Contract
+    participant RPC Proxy
+
+    Note over Admin, Insurance Contract: Policy Creation (Admin Only)
+    Admin->>Insurance Contract: createPolicy(parameters, thresholds)
+    Insurance Contract->>Insurance Contract: Store policy configuration
+    Insurance Contract-->>Admin: Policy ID created
+
+    Note over User, RPC Proxy: User Purchases Share
+    User->>UI: View available policies
+    UI->>Insurance Contract: getPolicies() / getPolicyDetails(policyId)
+    Insurance Contract-->>UI: Available policies and terms
+    UI-->>User: Display policy options
+    User->>UI: Select policy and ETH amount
+    UI->>Insurance Contract: getShareQuote(policyId, ethAmount)
+    Insurance Contract-->>UI: Coverage details (incidents covered)
+    UI-->>User: Display coverage quote
+    User->>UI: Purchase policy share
+    UI->>Insurance Contract: purchaseShare(policyId) + ETH deposit
+    Insurance Contract->>Insurance Contract: Record ETH amount for caller address
+    Insurance Contract->>Insurance Contract: Calculate incidents covered
+    Insurance Contract-->>UI: Share purchase confirmation
+    UI-->>User: Coverage confirmation with incident count
+```
+
+#### 2. EVM Tech Architecture vs Stacks Txn Broadcasting with Delay Tracking 
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant RPC Proxy
+    participant Blockchain Network RPC
+    participant Insurance Contract
+
+    User->>RPC Proxy: Submit transaction
+    RPC Proxy->>Blockchain Network RPC: getBlockNumber()
+    Blockchain Network RPC-->>RPC Proxy: Current block number
+    RPC Proxy->>RPC Proxy: Record submission block number
+    RPC Proxy->>Blockchain Network RPC: Broadcast transaction
+    RPC Proxy->>RPC Proxy: Sign submission proof
+    RPC Proxy-->>User: Transaction submitted response
+    
+    alt Transaction executed within policy threshold
+        Blockchain Network RPC-->>RPC Proxy: Transaction confirmed
+        RPC Proxy->>RPC Proxy: Record execution block number
+        RPC Proxy->>RPC Proxy: Calculate delay (execution - submission blocks)
+        Note over RPC Proxy: Delay <= policy threshold (e.g., 10 blocks)
+        RPC Proxy-->>User: Success response (no insurance claim)
+    else Transaction delayed beyond threshold
+        Note over Blockchain Network RPC: Transaction pending/quarantined
+        Blockchain Network RPC-->>RPC Proxy: Transaction confirmed (late)
+        RPC Proxy->>RPC Proxy: Record execution block number
+        RPC Proxy->>RPC Proxy: Calculate delay (execution - submission blocks)
+        Note over RPC Proxy: Delay > policy threshold (e.g., >10 blocks)
+        RPC Proxy->>RPC Proxy: Generate delay evidence proof
+        RPC Proxy-->>User: Delayed execution response + delay proof
+    else Transaction failed after delay
+        Note over Blockchain Network RPC: Transaction quarantined/failed
+        RPC Proxy->>RPC Proxy: Record failure
+        Note over RPC Proxy: No insurance payout for failed transactions
+        RPC Proxy-->>User: Transaction failed response
+    end
+```
+
+#### 3. EVM Tech Architecture vs Stacks Insurance Claim Processing Flow
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant RPC Proxy
+    participant Insurance Contract
+    participant Blockchain Network RPC
+
+    User->>RPC Proxy: Request claim for txHash
+    RPC Proxy->>RPC Proxy: Lookup cached transaction data
+    Note over RPC Proxy: Retrieve broadcast block & confirmation block
+    RPC Proxy->>RPC Proxy: Calculate delay (confirmation - broadcast blocks)
+    RPC Proxy->>RPC Proxy: Generate signed proof (txHash, broadcastBlock, confirmationBlock)
+    RPC Proxy-->>User: Signed delay evidence
+    
+    User->>RPC Proxy: Submit claim to contract
+    RPC Proxy->>Insurance Contract: submitClaim(policyId, txHash, signedProof)
+    Insurance Contract->>Insurance Contract: Verify RPC Proxy signature
+    Insurance Contract->>Insurance Contract: Validate delay against policy threshold
+    Insurance Contract->>Blockchain Network RPC: Verify transaction exists and block data
+    Blockchain Network RPC-->>Insurance Contract: Transaction confirmation
+    
+    alt Valid claim and delay > threshold
+        Insurance Contract->>Insurance Contract: Calculate payout amount
+        Insurance Contract->>Insurance Contract: Check user's incident coverage remaining
+        Insurance Contract->>User: Transfer payout (ETH)
+        Insurance Contract->>Insurance Contract: Decrement user's incident count
+        Insurance Contract-->>RPC Proxy: Claim approved
+    else Invalid claim or no coverage
+        Insurance Contract-->>RPC Proxy: Claim rejected
+    end
+    
+    RPC Proxy-->>User: Claim result
+```
+
+#### 4. Complete User Journey
+
+```mermaid
+graph TD
+    A[User wants to send transaction] --> B[Purchase insurance policy]
+    B --> C[Submit transaction via RPC Proxy]
+    C --> D{Transaction executed on time?}
+    D -->|Yes| E[Transaction successful, no claim needed]
+    D -->|No| F[Transaction delayed/failed]
+    F --> G[Submit insurance claim]
+    G --> H[RPC Proxy provides delay proof]
+    H --> I[Insurance contract verifies claim]
+    I --> J{Valid claim?}
+    J -->|Yes| K[Receive insurance payout]
+    J -->|No| L[Claim rejected]
+```
 
 HyperInsure is built on a streamlined contract architecture with three core components:
 
