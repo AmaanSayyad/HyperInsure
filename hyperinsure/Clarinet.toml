@@ -23,6 +23,12 @@ depends_on = ["oracle", "governance"]
 [repl.analysis]
 passes = ['check_checker']
 
+[contracts.simple-insurance]
+path = 'contracts/simple-insurance.clar'
+clarity_version = 3
+epoch = '3.2'
+
+
 [repl.analysis.check_checker]
 strict = false
 trusted_sender = false
