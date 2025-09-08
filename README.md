@@ -224,4 +224,5 @@ We plan to extend HyperInsure to cover additional blockchain risks:
 ## Contact
 
 For questions or support, please reach out to us at:
+- PitchDeck: https://docs.google.com/presentation/d/1EkrUS-6aj6qx1YxMwxP_RauebVnhXj5RC8IYZp5XFBw/edit?usp=sharing 
 - Twitter: [@HyperInsure](https://x.com/hyperinsure)
