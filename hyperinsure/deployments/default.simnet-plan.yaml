@@ -77,9 +77,4 @@ plan:
             emulated-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
             path: contracts/oracle.clar
             clarity-version: 3
-        - emulated-contract-publish:
-            contract-name: simple-insurance
-            emulated-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
-            path: contracts/simple-insurance.clar
-            clarity-version: 3
       epoch: "3.2"

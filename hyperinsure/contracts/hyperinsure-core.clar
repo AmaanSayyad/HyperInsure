@@ -74,6 +74,7 @@
 (define-data-var claim-count uint u0)
 (define-data-var total-deposits uint u0)
 (define-data-var total-payouts uint u0)
+(define-data-var reserve-ratio uint u5000) ;; 50% in basis points
 
 ;; Read-only functions
 (define-read-only (get-admin)
@@ -341,6 +342,15 @@
   (begin
     (asserts! (is-eq tx-sender (var-get admin)) (err ERR_UNAUTHORIZED))
     (var-set admin new-admin)
+    (ok true)
+  )
+)
+
+(define-public (set-reserve-ratio (new-ratio uint))
+  (begin
+    (asserts! (is-eq tx-sender (var-get admin)) (err ERR_UNAUTHORIZED))
+    (asserts! (<= new-ratio u10000) (err ERR_INVALID_PARAMETER))
+    (var-set reserve-ratio new-ratio)
     (ok true)
   )
 )
