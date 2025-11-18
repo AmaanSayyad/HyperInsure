@@ -189,7 +189,7 @@ git clone https://github.com/AmaanSayyad/hyperinsure.git
 cd hyperinsure
 
 # Install dependencies
-npm install --legacy-peer-deps
+npm install
 
 # Start the development server
 npm run dev
