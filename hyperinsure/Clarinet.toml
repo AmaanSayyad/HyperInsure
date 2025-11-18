@@ -26,6 +26,12 @@ path = 'contracts/hyperinsure-core.clar'
 clarity_version = 3
 epoch = '3.2'
 depends_on = ["oracle", "governance"]
+
+[contracts.hyperinsure-core-v2]
+path = 'contracts/hyperinsure-core-v2.clar'
+clarity_version = 3
+epoch = '3.2'
+depends_on = ["clarity-bitcoin"]
 [repl.analysis]
 passes = ['check_checker']
 
