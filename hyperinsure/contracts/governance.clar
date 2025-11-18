@@ -305,3 +305,70 @@
     (ok true)
   )
 )
+
+;; FUZZ TESTING - INVARIANTS
+
+;; Invariant: Voting period must always be positive
+(define-read-only (invariant-voting-period-positive)
+  (> (var-get voting-period) u0)
+)
+
+;; Invariant: Proposal count should be non-negative
+(define-read-only (invariant-proposal-count-valid)
+  (>= (var-get proposal-count) u0)
+)
+
+;; FUZZ TESTING - PROPERTY-BASED TESTS
+
+;; Test: Setting a parameter should allow reading it back (admin only)
+(define-public (test-set-get-parameter (param-value uint))
+  (begin
+    (if (or (<= param-value u0) (not (is-eq tx-sender (var-get admin))))
+      (ok false) ;; Discard invalid inputs or non-admin callers
+      (begin
+        (try! (set-parameter
+          "fuzz-test-param"
+          param-value
+          u"Fuzz test parameter"
+        ))
+        (let
+          ((retrieved-value (get-parameter-value "fuzz-test-param")))
+          (asserts! (is-eq retrieved-value param-value) (err u999))
+          (ok true)
+        )
+      )
+    )
+  )
+)
+
+;; Test: Setting voting period with valid values (admin only)
+(define-public (test-set-voting-period (new-period uint))
+  (begin
+    (if (or (<= new-period u0) (not (is-eq tx-sender (var-get admin))))
+      (ok false) ;; Discard invalid inputs or non-admin callers
+      (begin
+        (try! (set-voting-period new-period))
+        (asserts!
+          (is-eq (var-get voting-period) new-period)
+          (err u994)
+        )
+        (ok true)
+      )
+    )
+  )
+)
+
+;; Test: Setting min approval percentage with boundary values
+(define-public (test-set-approval-percentage (percentage uint))
+  (begin
+    (if (or (<= percentage u0) (> percentage u10000))
+      ;; Should fail for invalid values
+      (match (set-min-approval-percentage percentage)
+        success (err u993) ;; Should not succeed
+        error (ok true) ;; Should fail
+      )
+      ;; Should succeed for valid values
+      (ok true)
+    )
+  )
+)

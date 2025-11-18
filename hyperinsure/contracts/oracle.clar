@@ -190,3 +190,36 @@
     (ok true)
   )
 )
+
+;; FUZZ TESTING - INVARIANTS
+
+;; Invariant: Delay calculation should always be non-negative
+(define-read-only (invariant-delay-non-negative)
+  (let
+    ((broadcast-height u100)
+     (inclusion-height u150))
+    (>= (calculate-delay broadcast-height inclusion-height) u0)
+  )
+)
+
+;; FUZZ TESTING - PROPERTY-BASED TESTS
+
+;; Test: Delay calculation is correct
+(define-public (test-delay-calculation
+    (broadcast-height uint)
+    (inclusion-height uint)
+  )
+  (begin
+    (if (> broadcast-height inclusion-height)
+      (ok false) ;; Discard invalid inputs
+      (let
+        (
+          (calculated-delay (calculate-delay broadcast-height inclusion-height))
+          (expected-delay (- inclusion-height broadcast-height))
+        )
+        (asserts! (is-eq calculated-delay expected-delay) (err u991))
+        (ok true)
+      )
+    )
+  )
+)

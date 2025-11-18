@@ -377,3 +377,71 @@
     )
   )
 )
+
+;; FUZZ TESTING - INVARIANTS
+
+;; Invariant: Reserve ratio must be between 0 and 10000 (100%)
+(define-read-only (invariant-reserve-ratio-valid)
+  (let
+    ((ratio (var-get reserve-ratio)))
+    (and (>= ratio u0) (<= ratio u10000))
+  )
+)
+
+;; FUZZ TESTING - PROPERTY-BASED TESTS
+
+;; Helper: Ensure test policy exists
+(define-private (ensure-test-policy)
+  (if (is-none (get-policy "test-policy"))
+    (create-policy
+      "test-policy"
+      "Test Policy"
+      u"Policy for fuzz testing"
+      u35
+      u200 ;; 2%
+      u100 ;; 1%
+      u1000000
+    )
+    (ok "test-policy")
+  )
+)
+
+;; Test: Premium calculation is consistent
+(define-public (test-premium-calculation (stx-amount uint))
+  (begin
+    (if (or (<= stx-amount u0) (not (is-eq tx-sender (var-get admin))))
+      (ok false) ;; Discard invalid inputs or non-admin
+      (begin
+        (try! (ensure-test-policy))
+        (let
+          (
+            (calculated-premium (calculate-premium "test-policy" stx-amount))
+            (expected-premium (/ (* stx-amount u200) u10000))
+          )
+          (asserts! (is-eq calculated-premium expected-premium) (err u993))
+          (ok true)
+        )
+      )
+    )
+  )
+)
+
+;; Test: Fee calculation is consistent
+(define-public (test-fee-calculation (stx-amount uint))
+  (begin
+    (if (or (<= stx-amount u0) (not (is-eq tx-sender (var-get admin))))
+      (ok false) ;; Discard invalid inputs or non-admin
+      (begin
+        (try! (ensure-test-policy))
+        (let
+          (
+            (calculated-fee (calculate-fee "test-policy" stx-amount))
+            (expected-fee (/ (* stx-amount u100) u10000))
+          )
+          (asserts! (is-eq calculated-fee expected-fee) (err u992))
+          (ok true)
+        )
+      )
+    )
+  )
+)

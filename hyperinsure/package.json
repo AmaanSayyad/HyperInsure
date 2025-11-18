@@ -1,4 +1,3 @@
-
 {
   "name": "hyperinsure-tests",
   "version": "1.0.0",
@@ -8,7 +7,16 @@
   "scripts": {
     "test": "vitest run",
     "test:report": "vitest run -- --coverage --costs",
-    "test:watch": "chokidar \"tests/**/*.ts\" \"contracts/**/*.clar\" -c \"npm run test:report\""
+    "test:watch": "chokidar \"tests/**/*.ts\" \"contracts/**/*.clar\" -c \"npm run test:report\"",
+    "fuzz:governance:test": "npx rv . governance test --runs 100",
+    "fuzz:governance:invariant": "npx rv . governance invariant --runs 100",
+    "fuzz:oracle:test": "npx rv . oracle test --runs 100",
+    "fuzz:oracle:invariant": "npx rv . oracle invariant --runs 100",
+    "fuzz:core:test": "npx rv . hyperinsure-core test --runs 100",
+    "fuzz:core:invariant": "npx rv . hyperinsure-core invariant --runs 100",
+    "fuzz:all:test": "npm run fuzz:governance:test && npm run fuzz:oracle:test && npm run fuzz:core:test",
+    "fuzz:all:invariant": "npm run fuzz:governance:invariant && npm run fuzz:oracle:invariant && npm run fuzz:core:invariant",
+    "fuzz:all": "npm run fuzz:all:test && npm run fuzz:all:invariant"
   },
   "author": "",
   "license": "ISC",
@@ -18,5 +26,8 @@
     "chokidar-cli": "^3.0.0",
     "vitest": "^3.1.3",
     "vitest-environment-clarinet": "^2.3.0"
+  },
+  "devDependencies": {
+    "@stacks/rendezvous": "^0.12.0"
   }
 }
