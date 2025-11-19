@@ -6,21 +6,10 @@ const accounts = simnet.getAccounts();
 const deployer = accounts.get("deployer")!;
 const user = accounts.get("wallet_1")!;
 
-/**
- * HyperInsure V2 - Real Bitcoin Mainnet Transaction Test
- * 
- * Uses REAL Bitcoin transaction data from mainnet:
- * TxID: 819571907118de9fa875ea126c7b128fc1bc998d89aa4196d6ade11d1fc21461
- * Block Height: 924,282
- * Broadcast Height: ~924,233
- * Delay: 49 blocks (exceeds 35 block threshold)
- * 
- * This test uses actual Bitcoin transaction hex, block header, and merkle proof
- * to demonstrate trustless verification using clarity-bitcoin-lib-v5
- */
+
 describe("HyperInsure V2 - Real Bitcoin Transaction Verification", () => {
   
-  // Real Bitcoin mainnet transaction data
+
   const REAL_TX_DATA = {
     txid: "819571907118de9fa875ea126c7b128fc1bc998d89aa4196d6ade11d1fc21461",
     blockHeight: 924282,
@@ -28,21 +17,17 @@ describe("HyperInsure V2 - Real Bitcoin Transaction Verification", () => {
     delay: 49,
     threshold: 35,
     
-    // Real transaction hex (non-witness)
-    // This would be fetched using: await getTxHex(txid) then removeWitnessData()
-    // For testing, we use a simplified version
-    txHex: "0200000001...", // Actual tx hex would be here
+
+    txHex: "0200000001...", 
     
-    // Real block header (80 bytes)
-    // Fetched using: await getBlkHeader(blockHeight)
-    blockHeader: "00000020...", // Actual block header would be here
     
-    // Real merkle proof
-    // Fetched using: await getTxMerkleProof(txid)
+    blockHeader: "00000020...",
+    
+    
     merkleProof: {
       pos: 878,
       merkle: [
-        // Actual merkle hashes would be here
+        
         "abc123...",
         "def456...",
         "ghi789...",
@@ -61,9 +46,9 @@ describe("HyperInsure V2 - Real Bitcoin Transaction Verification", () => {
           Cl.stringAscii("Bitcoin Delay Insurance V2"),
           Cl.stringUtf8("Trustless Bitcoin transaction delay protection"),
           Cl.uint(REAL_TX_DATA.threshold),
-          Cl.uint(500), // 5% premium
-          Cl.uint(100), // 1% fee
-          Cl.uint(10000000), // 10 STX payout
+          Cl.uint(500), 
+          Cl.uint(100), 
+          Cl.uint(10000000), 
         ],
         deployer
       );
@@ -77,7 +62,7 @@ describe("HyperInsure V2 - Real Bitcoin Transaction Verification", () => {
     });
 
     it("should purchase V2 policy", () => {
-      // Create policy first
+      
       simnet.callPublicFn(
         "hyperinsure-core-v2",
         "create-policy",
@@ -93,7 +78,7 @@ describe("HyperInsure V2 - Real Bitcoin Transaction Verification", () => {
         deployer
       );
 
-      // Fund contract
+     
       simnet.callPublicFn(
         "hyperinsure-core-v2",
         "fund-contract",
@@ -101,7 +86,7 @@ describe("HyperInsure V2 - Real Bitcoin Transaction Verification", () => {
         deployer
       );
 
-      // Purchase policy
+      
       const { result } = simnet.callPublicFn(
         "hyperinsure-core-v2",
         "purchase-policy",
