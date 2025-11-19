@@ -58,11 +58,23 @@ genesis:
     - pox-4
     - signers
     - signers-voting
-    - costs-4
 plan:
   batches:
     - id: 0
       transactions:
+        - emulated-contract-publish:
+            contract-name: clarity-bitcoin
+            emulated-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
+            path: contracts/clarity-bitcoin.clar
+            clarity-version: 3
+      epoch: "3.0"
+    - id: 1
+      transactions:
+        - emulated-contract-publish:
+            contract-name: governance
+            emulated-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
+            path: contracts/governance.clar
+            clarity-version: 3
         - emulated-contract-publish:
             contract-name: hyperinsure-core
             emulated-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
@@ -74,11 +86,3 @@ plan:
             path: contracts/oracle.clar
             clarity-version: 3
       epoch: "3.2"
-    - id: 1
-      transactions:
-        - emulated-contract-publish:
-            contract-name: governance
-            emulated-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
-            path: contracts/governance.clar
-            clarity-version: 3
-      epoch: "3.3"

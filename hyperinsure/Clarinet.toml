@@ -5,15 +5,21 @@ authors = []
 telemetry = true
 cache_dir = './.cache'
 requirements = []
+[contracts.clarity-bitcoin]
+path = 'contracts/clarity-bitcoin.clar'
+clarity_version = 3
+epoch = '3.0'
+
 [contracts.oracle]
 path = 'contracts/oracle.clar'
 clarity_version = 3
 epoch = '3.2'
+depends_on = ["clarity-bitcoin"]
 
 [contracts.governance]
 path = 'contracts/governance.clar'
 clarity_version = 3
-epoch = 'latest'
+epoch = '3.2'
 
 [contracts.hyperinsure-core]
 path = 'contracts/hyperinsure-core.clar'
@@ -36,5 +42,6 @@ trusted_caller = false
 callee_filter = false
 
 [repl.remote_data]
-enabled = false
+enabled = true
 api_url = 'https://api.hiro.so'
+initial_height = 595050
