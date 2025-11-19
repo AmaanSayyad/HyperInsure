@@ -81,6 +81,11 @@ plan:
             path: contracts/hyperinsure-core.clar
             clarity-version: 3
         - emulated-contract-publish:
+            contract-name: hyperinsure-core-v2
+            emulated-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
+            path: contracts/hyperinsure-core-v2.clar
+            clarity-version: 3
+        - emulated-contract-publish:
             contract-name: oracle
             emulated-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
             path: contracts/oracle.clar
