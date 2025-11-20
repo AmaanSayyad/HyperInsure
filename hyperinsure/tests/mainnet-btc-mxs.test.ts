@@ -1,45 +1,18 @@
-import { describe, it, expect, beforeAll } from "vitest";
+import { describe, it, expect } from "vitest";
 import { Cl } from "@stacks/transactions";
-
-/**
- * Mainnet Execution Simulation (MXS) Test
- * 
- * This test uses the REAL clarity-bitcoin-lib-v5 contract deployed on mainnet:
- * SP2PABAF9FTAJYNFZH93XENAJ8FVY99RRM50D2JG9.clarity-bitcoin-lib-v5
- * 
- * Requirements:
- * - Clarinet.toml must have [repl.remote_data] enabled
- * - Tests run against mainnet state at specified block height
- * - No local contract deployment needed
- */
 
 const accounts = simnet.getAccounts();
 const deployer = accounts.get("deployer")!;
 const user = accounts.get("wallet_1")!;
 
-// Mainnet clarity-bitcoin-lib-v5 contract address
 const CLARITY_BITCOIN_MAINNET = "SP2PABAF9FTAJYNFZH93XENAJ8FVY99RRM50D2JG9.clarity-bitcoin-lib-v5";
 
-/**
- * Real Bitcoin Transaction Data
- * Block: 883230 (Bitcoin) → 595050 (Stacks)
- * TxID: c1de234c01ecc47906117d012865ce3dabbbb081dc0309a74dbbae45e427aadc
- * 
- * This is a known working example from Friedger's documentation
- * Data fetched from mempool.space API using scripts/fetch-btc-data.js
- */
 const REAL_BTC_DATA = {
   txid: "c1de234c01ecc47906117d012865ce3dabbbb081dc0309a74dbbae45e427aadc",
   blockHeight: 883230,
   broadcastHeight: 883190,
-  
-  // Non-witness transaction hex
   txHex: "0200000001f6e86a2b938453e199836ad4e2ba751c5ded24f4e1c2934b3434cd00f9bce61d0100000000fdffffff02856e00000000000017a914c5beca99b2b4c558b297ed9134142f4a3873f4e987d0b8390100000000160014b84ef1e7e398d56fa88a356df3139ff997114f0400000000",
-  
-  // 80-byte block header
   blockHeader: "040060208c8b71956e408769453d40275830b83856bc0d8afaf60000000000000000000069167b97329b04d11aea35a48fbfc00af71c9750c4526d024dbb97158793eac31379aa672677021707a18259",
-  
-  // Merkle proof
   merkleProof: {
     txIndex: 1,
     hashes: [
@@ -58,17 +31,11 @@ const REAL_BTC_DATA = {
   }
 };
 
-/**
- * Helper: Reverse bytes for Clarity format
- */
 function reverseHexBytes(hex: string): Buffer {
   const buffer = Buffer.from(hex, "hex");
   return buffer.reverse();
 }
 
-/**
- * Helper: Format merkle proof for Clarity
- */
 function formatMerkleProof(proof: typeof REAL_BTC_DATA.merkleProof) {
   return Cl.tuple({
     "tx-index": Cl.uint(proof.txIndex),
@@ -81,7 +48,6 @@ describe("Mainnet Execution Simulation - Real clarity-bitcoin-lib-v5", () => {
   
   describe("Setup HyperInsure V2 Policy", () => {
     it("should create and fund V2 policy", () => {
-      // Create policy
       const createResult = simnet.callPublicFn(
         "hyperinsure-core-v2",
         "create-policy",
@@ -89,21 +55,20 @@ describe("Mainnet Execution Simulation - Real clarity-bitcoin-lib-v5", () => {
           Cl.stringAscii("btc-delay-mxs"),
           Cl.stringAscii("Bitcoin Delay MXS"),
           Cl.stringUtf8("Trustless Bitcoin delay insurance with MXS"),
-          Cl.uint(35), // threshold
-          Cl.uint(500), // premium
-          Cl.uint(100), // coverage
-          Cl.uint(10000000), // payout (10 STX)
+          Cl.uint(35),
+          Cl.uint(500),
+          Cl.uint(100),
+          Cl.uint(10000000),
         ],
         deployer
       );
       
       expect(createResult.result).toBeOk(Cl.stringAscii("btc-delay-mxs"));
       
-      // Fund contract
       const fundResult = simnet.callPublicFn(
         "hyperinsure-core-v2",
         "fund-contract",
-        [Cl.uint(100000000)], // 100 STX
+        [Cl.uint(100000000)],
         deployer
       );
       
@@ -117,7 +82,6 @@ describe("Mainnet Execution Simulation - Real clarity-bitcoin-lib-v5", () => {
     });
     
     it("should purchase policy", () => {
-      // Create policy first
       simnet.callPublicFn(
         "hyperinsure-core-v2",
         "create-policy",
@@ -133,7 +97,6 @@ describe("Mainnet Execution Simulation - Real clarity-bitcoin-lib-v5", () => {
         deployer
       );
       
-      // Fund contract
       simnet.callPublicFn(
         "hyperinsure-core-v2",
         "fund-contract",
@@ -141,13 +104,12 @@ describe("Mainnet Execution Simulation - Real clarity-bitcoin-lib-v5", () => {
         deployer
       );
       
-      // Purchase policy
       const purchaseResult = simnet.callPublicFn(
         "hyperinsure-core-v2",
         "purchase-policy",
         [
           Cl.stringAscii("btc-delay-mxs"),
-          Cl.uint(20000000), // 20 STX premium
+          Cl.uint(20000000),
           Cl.stringAscii("mxs-purchase-001"),
         ],
         user
@@ -163,7 +125,6 @@ describe("Mainnet Execution Simulation - Real clarity-bitcoin-lib-v5", () => {
   
   describe("Verify Bitcoin Transaction with Mainnet Contract", () => {
     it("should call mainnet clarity-bitcoin-lib-v5 contract", () => {
-      // Prepare data
       const txBuffer = Buffer.from(REAL_BTC_DATA.txHex, "hex");
       const headerBuffer = Buffer.from(REAL_BTC_DATA.blockHeader, "hex");
       const proofTuple = formatMerkleProof(REAL_BTC_DATA.merkleProof);
@@ -177,7 +138,6 @@ describe("Mainnet Execution Simulation - Real clarity-bitcoin-lib-v5", () => {
       console.log(`   Header Size: ${headerBuffer.length} bytes`);
       console.log(`   Merkle Hashes: ${REAL_BTC_DATA.merkleProof.hashes.length}`);
       
-      // Call mainnet contract
       const { result } = simnet.callReadOnlyFn(
         CLARITY_BITCOIN_MAINNET,
         "was-tx-mined-compact",
@@ -192,18 +152,14 @@ describe("Mainnet Execution Simulation - Real clarity-bitcoin-lib-v5", () => {
       
       console.log(`\n   Result: ${JSON.stringify(result, null, 2)}`);
       
-      // Verify result is (ok tx-hash)
       expect(result).toBeOk(expect.anything());
       
-      // Extract returned tx-hash
       const okValue = (result as any).value;
-      // The value is a hex string encoded as UTF-8 bytes
       const returnedTxid = Buffer.from(okValue.value).toString("utf8");
       
       console.log(`   Returned TxID: ${returnedTxid}`);
       console.log(`   Expected TxID: ${REAL_BTC_DATA.txid}`);
       
-      // Verify hash matches
       expect(returnedTxid).toBe(REAL_BTC_DATA.txid);
       
       console.log("\n   ✅ Mainnet Contract Verification PASSED!");
@@ -214,7 +170,6 @@ describe("Mainnet Execution Simulation - Real clarity-bitcoin-lib-v5", () => {
   
   describe("Complete Claim Flow with Mainnet Verification", () => {
     it("should process claim after mainnet verification", () => {
-      // Setup: Create policy, fund, and purchase
       simnet.callPublicFn(
         "hyperinsure-core-v2",
         "create-policy",
@@ -254,7 +209,6 @@ describe("Mainnet Execution Simulation - Real clarity-bitcoin-lib-v5", () => {
       console.log("   ✅ Contract funded");
       console.log("   ✅ Policy purchased");
       
-      // Step 1: Verify with mainnet contract
       const txBuffer = Buffer.from(REAL_BTC_DATA.txHex, "hex");
       const headerBuffer = Buffer.from(REAL_BTC_DATA.blockHeader, "hex");
       const proofTuple = formatMerkleProof(REAL_BTC_DATA.merkleProof);
@@ -279,7 +233,6 @@ describe("Mainnet Execution Simulation - Real clarity-bitcoin-lib-v5", () => {
       expect(verifyResult.result).toBeOk(expect.anything());
       console.log("   ✅ Verification PASSED");
       
-      // Step 2: Calculate delay
       const delay = REAL_BTC_DATA.blockHeight - REAL_BTC_DATA.broadcastHeight;
       const threshold = 35;
       const meetsThreshold = delay >= threshold;
@@ -293,7 +246,6 @@ describe("Mainnet Execution Simulation - Real clarity-bitcoin-lib-v5", () => {
       
       expect(meetsThreshold).toBe(true);
       
-      // Step 3: Process claim (would call submit-claim-with-proof in real implementation)
       console.log("\n4️⃣ Claim Processing");
       console.log("   ✅ Merkle proof verified");
       console.log("   ✅ Delay threshold met");
