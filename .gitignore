@@ -6,7 +6,7 @@ enliven
 # next.js
 /.next/
 /out/
-
+.kiro
 # production
 /build
 
