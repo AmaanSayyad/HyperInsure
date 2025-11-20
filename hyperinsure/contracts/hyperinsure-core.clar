@@ -10,9 +10,10 @@
 (define-constant ERR_INVALID_PARAMETER u6)
 (define-constant ERR_CLAIM_EXISTS u7)
 (define-constant ERR_CLAIM_NOT_FOUND u8)
+(define-constant ERR_PURCHASE_EXISTS u9)
+(define-constant ERR_PURCHASE_EXPIRED u10)
 (define-constant ERR_POLICY_INACTIVE u11)
 (define-constant ERR_PURCHASE_INACTIVE u12)
-(define-constant ERR_PURCHASE_EXPIRED u13)
 (define-constant ERR_ALREADY_CLAIMED u14)
 
 ;; Claim status
@@ -177,6 +178,9 @@
     (total-cost (+ premium fee))
   )
     (begin
+      ;; Ensure purchase doesn't already exist
+      (asserts! (is-none (get-purchase purchase-id)) (err ERR_PURCHASE_EXISTS))
+      
       ;; Ensure policy is active
       (asserts! (get active policy) (err ERR_POLICY_INACTIVE))
       
@@ -268,6 +272,8 @@
 (define-public (process-claim (claim-id (string-ascii 36)) (status uint))
   (let (
     (claim (unwrap! (get-claim claim-id) (err ERR_CLAIM_NOT_FOUND)))
+    (payout-amount (get payout-amount claim))
+    (recipient (get claimer claim))
   )
     (begin
       ;; Only admin can process claims
@@ -283,22 +289,46 @@
                 ) 
                 (err ERR_INVALID_PARAMETER))
       
-      ;; Update claim status
-      (map-set claims
-        { claim-id: claim-id }
-        (merge claim 
-          { 
-            status: status,
-            processed-at: (some stacks-block-height),
-            processed-by: (some tx-sender)
-          }
-        )
-      )
-      
       ;; Process payout if approved
       (if (is-eq status CLAIM_STATUS_APPROVED)
-        (pay-claim claim-id)
-        (ok claim-id)
+        (begin
+          ;; Check if contract has enough funds
+          (asserts! (>= (stx-get-balance (as-contract tx-sender)) payout-amount) (err ERR_INSUFFICIENT_FUNDS))
+          
+          ;; Process the payout
+          (try! (as-contract (stx-transfer? payout-amount tx-sender recipient)))
+          
+          ;; Update total payouts
+          (var-set total-payouts (+ (var-get total-payouts) payout-amount))
+          
+          ;; Update claim status to paid
+          (map-set claims
+            { claim-id: claim-id }
+            (merge claim 
+              { 
+                status: CLAIM_STATUS_PAID,
+                processed-at: (some stacks-block-height),
+                processed-by: (some tx-sender)
+              }
+            )
+          )
+          
+          (ok claim-id)
+        )
+        (begin
+          ;; Update claim status to rejected
+          (map-set claims
+            { claim-id: claim-id }
+            (merge claim 
+              { 
+                status: status,
+                processed-at: (some stacks-block-height),
+                processed-by: (some tx-sender)
+              }
+            )
+          )
+          (ok claim-id)
+        )
       )
     )
   )
@@ -342,6 +372,13 @@
   (begin
     (asserts! (is-eq tx-sender (var-get admin)) (err ERR_UNAUTHORIZED))
     (var-set admin new-admin)
+    (ok true)
+  )
+)
+
+(define-public (fund-contract (amount uint))
+  (begin
+    (try! (stx-transfer? amount tx-sender (as-contract tx-sender)))
     (ok true)
   )
 )
