@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { Menu } from "lucide-react"
 import Link from "next/link" // Import Link for client-side navigation
-import StacksWalletConnect from "./stackswalletcontext"
+import { ConnectWalletButton } from "@/lib/stacks-provider"
 
 export function Header() {
   const landingNavItems = [
@@ -64,14 +64,11 @@ export function Header() {
         </div>
         <div className="flex items-center gap-4">
           <Link href="/purchase" className="hidden md:block">
-          <StacksWalletConnect
-              variant="default"
-              size="sm"
-              className="bg-orange-500 hover:bg-orange-600 text-white text-xs"
-              showAddress={true}
-            />
-          
+            <Button className="bg-orange-500 hover:bg-orange-600 text-white text-sm">
+              Get Coverage
+            </Button>
           </Link>
+          <ConnectWalletButton className="hidden md:block text-sm" />
           <Sheet>
             <SheetTrigger asChild className="md:hidden">
               <Button variant="ghost" size="icon" className="text-foreground">

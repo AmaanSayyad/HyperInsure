@@ -4,12 +4,19 @@ import { GeistMono } from 'geist/font/mono'
 import { Analytics } from '@vercel/analytics/next'
 import { Toaster } from 'sonner'
 import './globals.css'
-import { StacksWalletProvider } from '@/components/stackswalletconnect'
+import { StacksProvider } from '@/lib/stacks-provider'
 
 export const metadata: Metadata = {
-  title: 'v0 App',
-  description: 'Created with v0',
-  generator: 'v0.app',
+  title: 'HyperInsure - Trustless Bitcoin Transaction Insurance',
+  description: 'Decentralized insurance for Bitcoin transaction delays using cryptographic proofs',
+  generator: 'HyperInsure',
+  keywords: ['Bitcoin', 'Insurance', 'DeFi', 'Stacks', 'Blockchain', 'Trustless'],
+  authors: [{ name: 'HyperInsure Team' }],
+  openGraph: {
+    title: 'HyperInsure - Trustless Bitcoin Transaction Insurance',
+    description: 'Decentralized insurance for Bitcoin transaction delays using cryptographic proofs',
+    type: 'website',
+  },
 }
 
 export default function RootLayout({
@@ -29,11 +36,11 @@ html {
         `}</style>
       </head>
       <body>
-        <StacksWalletProvider>
-        {children}
-        <Analytics />
-        <Toaster position="top-center" richColors />
-        </StacksWalletProvider>
+        <StacksProvider>
+          {children}
+          <Analytics />
+          <Toaster position="top-center" richColors />
+        </StacksProvider>
       </body>
     </html>
   )

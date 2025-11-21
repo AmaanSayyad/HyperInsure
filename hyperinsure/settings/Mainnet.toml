@@ -1,0 +1,53 @@
+[network]
+name = "mainnet"
+deployment_fee_rate = 50
+api_url = "https://api.hiro.so"
+
+[accounts.deployer]
+# SECURITY WARNING: Never commit real mainnet mnemonics to version control
+# Use environment variables or hardware wallets for mainnet deployments
+# mnemonic = "USE_ENVIRONMENT_VARIABLE_OR_HARDWARE_WALLET"
+balance = 100_000_000_000_000
+
+[accounts.insurance_provider]
+# Insurance provider account for funding the treasury
+# Use a secure method to provide this account information
+balance = 50_000_000_000_000
+
+[accounts.operations]
+# Operations account for contract management
+balance = 10_000_000_000_000
+
+# Mainnet-specific settings
+[mainnet]
+# Bitcoin mainnet integration
+bitcoin_network = "mainnet"
+bitcoin_api_url = "https://mempool.space/api"
+
+# Contract deployment settings
+clarity_version = 3
+epoch = "3.2"
+
+# Production parameters
+initial_treasury_funding = 10000000000000  # 10,000 STX
+min_policy_premium = 1000000000            # 1000 STX
+max_coverage_amount = 100000000000000      # 100,000 STX
+min_policy_duration = 144                  # ~1 day in blocks
+max_policy_duration = 52560                # ~1 year in blocks
+
+# Security settings
+multi_sig_threshold = 2
+admin_addresses = [
+    # "SP1234567890ABCDEF...",  # Admin 1
+    # "SP2345678901BCDEFG...",  # Admin 2
+    # "SP3456789012CDEFGH...",  # Admin 3
+]
+
+# Rate limiting and safety
+max_claims_per_block = 10
+max_payout_per_block = 1000000000000  # 1,000 STX
+treasury_reserve_ratio = 0.2          # Keep 20% in reserve
+
+# Monitoring and alerts
+alert_low_treasury_threshold = 1000000000000  # 1,000 STX
+alert_high_claim_rate_threshold = 5           # claims per block

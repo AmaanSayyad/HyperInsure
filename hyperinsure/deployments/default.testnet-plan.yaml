@@ -1,0 +1,77 @@
+---
+id: 0
+name: Testnet deployment
+network: testnet
+stacks-node: "https://api.testnet.hiro.so"
+bitcoin-node: "http://blockstack:blockstacksystem@bitcoind.testnet.stacks.co:18332"
+plan:
+  batches:
+    - id: 0
+      transactions:
+        - contract-publish:
+            contract-name: clarity-bitcoin
+            expected-sender: ST19EWTQXJHNE6QTTSJYET2079J91CM9BRQ8XAH1V
+            cost: 21480
+            path: "contracts\\clarity-bitcoin.clar"
+            anchor-block-only: true
+            clarity-version: 3
+      epoch: "3.0"
+    - id: 1
+      transactions:
+        - contract-publish:
+            contract-name: insurance-treasury-v2
+            expected-sender: ST19EWTQXJHNE6QTTSJYET2079J91CM9BRQ8XAH1V
+            cost: 89680
+            path: "contracts\\insurance-treasury-v2.clar"
+            anchor-block-only: true
+            clarity-version: 3
+        - contract-publish:
+            contract-name: policy-manager
+            expected-sender: ST19EWTQXJHNE6QTTSJYET2079J91CM9BRQ8XAH1V
+            cost: 49510
+            path: "contracts\\policy-manager.clar"
+            anchor-block-only: true
+            clarity-version: 3
+        - contract-publish:
+            contract-name: claim-processor
+            expected-sender: ST19EWTQXJHNE6QTTSJYET2079J91CM9BRQ8XAH1V
+            cost: 110010
+            path: "contracts\\claim-processor.clar"
+            anchor-block-only: true
+            clarity-version: 3
+        - contract-publish:
+            contract-name: frontend-api
+            expected-sender: ST19EWTQXJHNE6QTTSJYET2079J91CM9BRQ8XAH1V
+            cost: 64260
+            path: "contracts\\frontend-api.clar"
+            anchor-block-only: true
+            clarity-version: 3
+        - contract-publish:
+            contract-name: governance
+            expected-sender: ST19EWTQXJHNE6QTTSJYET2079J91CM9BRQ8XAH1V
+            cost: 103030
+            path: "contracts\\governance.clar"
+            anchor-block-only: true
+            clarity-version: 3
+        - contract-publish:
+            contract-name: hyperinsure-core
+            expected-sender: ST19EWTQXJHNE6QTTSJYET2079J91CM9BRQ8XAH1V
+            cost: 138460
+            path: "contracts\\hyperinsure-core.clar"
+            anchor-block-only: true
+            clarity-version: 3
+        - contract-publish:
+            contract-name: hyperinsure-core-v2
+            expected-sender: ST19EWTQXJHNE6QTTSJYET2079J91CM9BRQ8XAH1V
+            cost: 117380
+            path: "contracts\\hyperinsure-core-v2.clar"
+            anchor-block-only: true
+            clarity-version: 3
+        - contract-publish:
+            contract-name: oracle
+            expected-sender: ST19EWTQXJHNE6QTTSJYET2079J91CM9BRQ8XAH1V
+            cost: 80670
+            path: "contracts\\oracle.clar"
+            anchor-block-only: true
+            clarity-version: 3
+      epoch: "3.2"

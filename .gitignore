@@ -2,6 +2,7 @@
 
 # dependencies
 /node_modules
+/hyperinsure/node_modules
 enliven
 # next.js
 /.next/
@@ -18,6 +19,11 @@ yarn-error.log*
 
 # env files
 .env*
+
+# hyperinsure specific
+/hyperinsure/.env*
+/hyperinsure/deployments/*.json
+/hyperinsure/wallet-info.json
 
 # vercel
 .vercel

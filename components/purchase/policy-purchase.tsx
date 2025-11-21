@@ -1,13 +1,16 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { toast } from "sonner"
-import { CheckCircle, Shield } from "lucide-react"
+import { CheckCircle, Shield, Loader2, ExternalLink } from "lucide-react"
+import { useStacks } from "@/lib/stacks-provider"
+import { ContractInteractions, formatSTX, parseSTX } from "@/lib/contract-utils"
+import { APP_CONFIG } from "@/lib/stacks-config"
 
 // Mock data for available policies
 const availablePolicies = [
@@ -44,12 +47,35 @@ const availablePolicies = [
 ]
 
 export function PolicyPurchase() {
+  const { isConnected, userSession, network } = useStacks()
   const [selectedPolicy, setSelectedPolicy] = useState(null)
   const [stxAmount, setStxAmount] = useState("")
-  const [showClaimForm, setShowClaimForm] = useState(false)
-  const [purchaseId, setPurchaseId] = useState("")
-  const [transactionHash, setTransactionHash] = useState("")
-  const [blockHeight, setBlockHeight] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
+  const [treasuryBalance, setTreasuryBalance] = useState(0)
+  const [contractInteractions, setContractInteractions] = useState<ContractInteractions | null>(null)
+
+  // Initialize contract interactions
+  useEffect(() => {
+    if (network) {
+      setContractInteractions(new ContractInteractions(network, userSession))
+    }
+  }, [network, userSession])
+
+  // Fetch treasury balance
+  useEffect(() => {
+    const fetchTreasuryBalance = async () => {
+      if (contractInteractions) {
+        try {
+          const balance = await contractInteractions.getTreasuryBalance()
+          setTreasuryBalance(balance)
+        } catch (error) {
+          console.error('Error fetching treasury balance:', error)
+        }
+      }
+    }
+
+    fetchTreasuryBalance()
+  }, [contractInteractions])
 
   const handlePolicySelect = (policy) => {
     setSelectedPolicy(policy)
@@ -57,60 +83,103 @@ export function PolicyPurchase() {
     setShowClaimForm(false)
   }
 
-  const handlePurchase = (e) => {
+  const handlePurchase = async (e) => {
     e.preventDefault()
+    
+    if (!isConnected) {
+      toast.error("Please connect your wallet first")
+      return
+    }
     
     if (!selectedPolicy || !stxAmount || parseFloat(stxAmount) <= 0) {
       toast.error("Please select a policy and enter a valid STX amount")
       return
     }
-    
-    // Here you would typically send the purchase request to your backend
-    console.log("Policy purchased:", {
-      policyId: selectedPolicy.id,
-      stxAmount: parseFloat(stxAmount),
-    })
-    
-    // Show success notification
-    toast.success("Policy purchased successfully", {
-      description: `You've purchased ${selectedPolicy.name} coverage for ${stxAmount} STX.`,
-    })
-    
-    // Generate a random purchase ID
-    const randomId = `PURCHASE-${Math.random().toString(36).substring(2, 10).toUpperCase()}`
-    setPurchaseId(randomId)
-    
-    // Show claim form instead of resetting
-    setShowClaimForm(true)
-  }
-  
-  const handleClaim = (e) => {
-    e.preventDefault()
-    
-    if (!transactionHash || !blockHeight) {
-      toast.error("Please enter both transaction hash and block height")
+
+    if (!contractInteractions) {
+      toast.error("Contract interactions not initialized")
       return
     }
     
-    // Here you would typically send the claim request to your backend
-    console.log("Claim submitted:", {
-      purchaseId,
-      transactionHash,
-      blockHeight,
-    })
+    setIsLoading(true)
     
-    // Ensure we're using the toast correctly
-    setTimeout(() => {
-      // Show notification that transaction is not delayed
-      toast.error("Transaction is not delayed, unable to claim", {
-        description: "The transaction has not experienced sufficient delay to qualify for a claim.",
-        duration: 5000, // Show for 5 seconds
+    try {
+      const coverageAmount = parseSTX(stxAmount)
+      const premium = Math.floor((coverageAmount * selectedPolicy.premiumPercentage) / 10000)
+      const duration = APP_CONFIG.DEFAULT_POLICY_DURATION
+      
+      // Call the purchase-policy function
+      const result = await contractInteractions.purchasePolicy(
+        coverageAmount,
+        premium,
+        duration
+      )
+      
+      toast.success("Policy purchase transaction submitted", {
+        description: `Transaction ID: ${result.txid}`,
+        action: {
+          label: "View",
+          onClick: () => window.open(`${APP_CONFIG.EXPLORER_URL}&txid=${result.txid}`, '_blank')
+        }
       })
-    }, 100)
+      
+      // Reset form
+      setSelectedPolicy(null)
+      setStxAmount("")
+      
+    } catch (error) {
+      console.error('Error purchasing policy:', error)
+      toast.error("Failed to purchase policy", {
+        description: error.message || "Please try again"
+      })
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
     <div className="w-full">
+      {/* Treasury Status */}
+      <Card className="mb-6 overflow-hidden rounded-2xl border border-white/20">
+        <div
+          className="absolute inset-0 rounded-2xl"
+          style={{
+            background: "rgba(231, 236, 235, 0.08)",
+            backdropFilter: "blur(4px)",
+            WebkitBackdropFilter: "blur(4px)",
+          }}
+        />
+        <CardContent className="relative z-10 p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-semibold text-foreground">Treasury Status</h3>
+              <p className="text-sm text-muted-foreground">Available for payouts</p>
+            </div>
+            <div className="text-right">
+              <div className="text-2xl font-bold text-foreground">
+                {formatSTX(treasuryBalance)}
+              </div>
+              <div className="text-sm text-muted-foreground">
+                Network: {APP_CONFIG.NETWORK.toUpperCase()}
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Wallet Connection Check */}
+      {!isConnected && (
+        <Card className="mb-6 overflow-hidden rounded-2xl border border-yellow-200 bg-yellow-50">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+              <p className="text-yellow-800">
+                Please connect your wallet to purchase insurance policies
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {availablePolicies.map((policy) => (
           <Card 
@@ -245,91 +314,19 @@ export function PolicyPurchase() {
             <CardFooter className="relative z-10">
               <Button 
                 type="submit" 
-                className="w-full bg-secondary text-secondary-foreground hover:bg-secondary/90 px-8 py-3 rounded-full font-medium text-base shadow-lg ring-1 ring-white/10"
+                disabled={!isConnected || isLoading}
+                className="w-full bg-secondary text-secondary-foreground hover:bg-secondary/90 px-8 py-3 rounded-full font-medium text-base shadow-lg ring-1 ring-white/10 disabled:opacity-50"
               >
-                Purchase Insurance
-              </Button>
-            </CardFooter>
-          </form>
-        </Card>
-      )}
-      
-      {showClaimForm && (
-        <Card className="mt-8 overflow-hidden rounded-2xl border border-white/20">
-          {/* Background with blur effect similar to homepage */}
-          <div
-            className="absolute inset-0 rounded-2xl"
-            style={{
-              background: "rgba(231, 236, 235, 0.08)",
-              backdropFilter: "blur(4px)",
-              WebkitBackdropFilter: "blur(4px)",
-            }}
-          />
-          {/* Additional subtle gradient overlay */}
-          <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent rounded-2xl" />
-          
-          <CardHeader className="relative z-10">
-            <CardTitle className="text-foreground text-xl font-semibold">Submit Insurance Claim</CardTitle>
-            <CardDescription className="text-muted-foreground">
-              Enter your transaction details to claim insurance
-            </CardDescription>
-          </CardHeader>
-          <form onSubmit={handleClaim}>
-            <CardContent className="relative z-10">
-              <div className="space-y-4">
-                <div className="rounded-xl border border-white/10 p-4 space-y-2 bg-white/5">
-                  <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Policy:</span>
-                    <span className="font-medium text-foreground">{selectedPolicy.name}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Purchase ID:</span>
-                    <span className="font-medium text-foreground">{purchaseId}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Insured Amount:</span>
-                    <span className="font-medium text-foreground">{stxAmount} STX</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Potential Payout:</span>
-                    <span className="font-medium text-foreground">{selectedPolicy.payoutPerIncident} STX</span>
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="transactionHash" className="text-foreground">Transaction Hash</Label>
-                  <Input
-                    id="transactionHash"
-                    placeholder="Enter transaction hash"
-                    value={transactionHash}
-                    onChange={(e) => setTransactionHash(e.target.value)}
-                    className="border-white/10 bg-white/5 focus-visible:ring-primary focus-visible:border-primary"
-                    required
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="blockHeight" className="text-foreground">Block Height</Label>
-                  <Input
-                    id="blockHeight"
-                    type="number"
-                    placeholder="Enter block height"
-                    value={blockHeight}
-                    onChange={(e) => setBlockHeight(e.target.value)}
-                    min="1"
-                    step="1"
-                    className="border-white/10 bg-white/5 focus-visible:ring-primary focus-visible:border-primary"
-                    required
-                  />
-                </div>
-              </div>
-            </CardContent>
-            <CardFooter className="relative z-10">
-              <Button 
-                type="submit" 
-                className="w-full bg-secondary text-secondary-foreground hover:bg-secondary/90 px-8 py-3 rounded-full font-medium text-base shadow-lg ring-1 ring-white/10"
-              >
-                Submit Claim
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Processing...
+                  </>
+                ) : !isConnected ? (
+                  "Connect Wallet to Purchase"
+                ) : (
+                  "Purchase Insurance"
+                )}
               </Button>
             </CardFooter>
           </form>

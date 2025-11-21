@@ -10,6 +10,22 @@ path = 'contracts/clarity-bitcoin.clar'
 clarity_version = 3
 epoch = '3.0'
 
+[contracts.insurance-treasury-v2]
+path = 'contracts/insurance-treasury-v2.clar'
+clarity_version = 3
+epoch = '3.2'
+
+[contracts.policy-manager]
+path = 'contracts/policy-manager.clar'
+clarity_version = 3
+epoch = '3.2'
+
+[contracts.claim-processor]
+path = 'contracts/claim-processor.clar'
+clarity_version = 3
+epoch = '3.2'
+depends_on = ["clarity-bitcoin", "insurance-treasury-v2", "policy-manager"]
+
 [contracts.oracle]
 path = 'contracts/oracle.clar'
 clarity_version = 3
@@ -32,6 +48,12 @@ path = 'contracts/hyperinsure-core-v2.clar'
 clarity_version = 3
 epoch = '3.2'
 depends_on = ["clarity-bitcoin"]
+
+[contracts.frontend-api]
+path = 'contracts/frontend-api.clar'
+clarity_version = 3
+epoch = '3.2'
+depends_on = ["insurance-treasury-v2", "policy-manager", "claim-processor"]
 [repl.analysis]
 passes = ['check_checker']
 

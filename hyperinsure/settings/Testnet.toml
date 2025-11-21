@@ -1,0 +1,45 @@
+[network]
+name = "testnet"
+deployment_fee_rate = 10
+api_url = "https://api.testnet.hiro.so"
+
+[accounts.deployer]
+# Deployer account for testnet
+mnemonic = "list finish hurt enter festival scissors angry cactus liar wave soon demand pizza fold raccoon drum whale love tornado mansion bulb ski gravity soon"
+balance = 100_000_000_000_000
+
+[accounts.insurance_provider]
+# Insurance provider account for funding the treasury
+mnemonic = "list finish hurt enter festival scissors angry cactus liar wave soon demand pizza fold raccoon drum whale love tornado mansion bulb ski gravity soon"
+balance = 50_000_000_000_000
+
+[accounts.policy_holder]
+# Test policy holder account
+mnemonic = "list finish hurt enter festival scissors angry cactus liar wave soon demand pizza fold raccoon drum whale love tornado mansion bulb ski gravity soon"
+balance = 10_000_000_000_000
+
+[accounts.test_user_1]
+# Additional test user
+mnemonic = "list finish hurt enter festival scissors angry cactus liar wave soon demand pizza fold raccoon drum whale love tornado mansion bulb ski gravity soon"
+balance = 10_000_000_000_000
+
+[accounts.test_user_2]
+# Additional test user
+mnemonic = "list finish hurt enter festival scissors angry cactus liar wave soon demand pizza fold raccoon drum whale love tornado mansion bulb ski gravity soon"
+balance = 10_000_000_000_000
+
+# Testnet-specific settings
+[testnet]
+# Bitcoin testnet integration
+bitcoin_network = "testnet"
+bitcoin_api_url = "https://mempool.space/testnet/api"
+
+# Contract deployment settings
+clarity_version = 3
+epoch = "3.2"
+
+# Testing parameters
+initial_treasury_funding = 1000000000  # 1000 STX
+test_policy_premium = 100000000        # 100 STX
+test_coverage_amount = 500000000       # 500 STX
+test_policy_duration = 1000            # blocks

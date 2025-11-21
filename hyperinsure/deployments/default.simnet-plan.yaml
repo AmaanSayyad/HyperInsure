@@ -71,6 +71,26 @@ plan:
     - id: 1
       transactions:
         - emulated-contract-publish:
+            contract-name: insurance-treasury-v2
+            emulated-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
+            path: contracts/insurance-treasury-v2.clar
+            clarity-version: 3
+        - emulated-contract-publish:
+            contract-name: policy-manager
+            emulated-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
+            path: contracts/policy-manager.clar
+            clarity-version: 3
+        - emulated-contract-publish:
+            contract-name: claim-processor
+            emulated-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
+            path: contracts/claim-processor.clar
+            clarity-version: 3
+        - emulated-contract-publish:
+            contract-name: frontend-api
+            emulated-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
+            path: contracts/frontend-api.clar
+            clarity-version: 3
+        - emulated-contract-publish:
             contract-name: governance
             emulated-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
             path: contracts/governance.clar
