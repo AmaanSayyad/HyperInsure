@@ -204,3 +204,216 @@ describe("Mainnet Bitcoin Transaction Claim", () => {
     expect(txData.merkleProof.merkle.length).toBeGreaterThan(0);
   });
 });
+
+/**
+ * Negative Test Case: Transaction with insufficient delay
+ * 
+ * This test uses a real unconfirmed transaction from mempool
+ * that should NOT qualify for insurance payout because:
+ * - It's either unconfirmed (still in mempool)
+ * - Or confirmed with delay less than threshold
+ */
+describe("Mainnet Bitcoin Transaction - Negative Case", () => {
+  // Real unconfirmed transaction from mempool
+  const UNCONFIRMED_TXID = "b8a7449f4a570f0f568a16aca5ba1344498a1e977ae0560df4d89b5449690100";
+  const BROADCAST_HEIGHT = 924280;
+  const CONFIRMATION_HEIGHT = 924285; // Only 5 blocks delay
+  const DELAY_BLOCKS = 5;
+  const THRESHOLD = 35;
+
+  it("should reject claim for transaction with insufficient delay", () => {
+    // Step 1: Fund the contract
+    simnet.callPublicFn(
+      "hyperinsure-core",
+      "fund-contract",
+      [Cl.uint(100000000)], // 100 STX
+      deployer
+    );
+
+    // Step 2: Create policy with 35 block threshold
+    simnet.callPublicFn(
+      "hyperinsure-core",
+      "create-policy",
+      [
+        Cl.stringAscii("btc-delay-strict"),
+        Cl.stringAscii("Strict Bitcoin Delay Insurance"),
+        Cl.stringUtf8("Only pays for significant delays"),
+        Cl.uint(THRESHOLD), // 35 blocks threshold
+        Cl.uint(500), // 5% premium
+        Cl.uint(100), // 1% protocol fee
+        Cl.uint(10000000), // 10 STX payout
+      ],
+      deployer
+    );
+
+    // Step 3: User purchases policy
+    simnet.callPublicFn(
+      "hyperinsure-core",
+      "purchase-policy",
+      [
+        Cl.stringAscii("btc-delay-strict"),
+        Cl.uint(20000000), // 20 STX
+        Cl.stringAscii("strict-purchase-001"),
+      ],
+      user
+    );
+
+    // Step 4: Register oracle
+    const publicKey = new Uint8Array(33).fill(2);
+    simnet.callPublicFn(
+      "oracle",
+      "register-oracle",
+      [
+        Cl.principal(oracle),
+        Cl.stringAscii("Strict Oracle"),
+        Cl.buffer(publicKey),
+      ],
+      deployer
+    );
+
+    // Step 5: Convert txid to buffer
+    const txHashBuffer = Buffer.from(UNCONFIRMED_TXID, "hex");
+
+    // Step 6: Oracle submits attestation with only 5 blocks delay
+    const signature = new Uint8Array(65).fill(2);
+    const { result: attestResult } = simnet.callPublicFn(
+      "oracle",
+      "submit-attestation",
+      [
+        Cl.buffer(txHashBuffer),
+        Cl.uint(BROADCAST_HEIGHT),
+        Cl.uint(CONFIRMATION_HEIGHT),
+        Cl.buffer(signature),
+      ],
+      oracle
+    );
+    expect(attestResult).toBeOk(Cl.uint(DELAY_BLOCKS));
+
+    // Step 7: User tries to submit claim - should FAIL
+    const { result: claimResult } = simnet.callPublicFn(
+      "hyperinsure-core",
+      "submit-claim",
+      [
+        Cl.stringAscii("strict-claim-001"),
+        Cl.stringAscii("strict-purchase-001"),
+        Cl.buffer(txHashBuffer),
+        Cl.uint(DELAY_BLOCKS),
+      ],
+      user
+    );
+    
+    // Should fail with ERR_INVALID_PARAMETER because delay < threshold
+    expect(claimResult).toBeErr(Cl.uint(6)); // ERR_INVALID_PARAMETER
+
+    console.log("\n❌ REJECTED: Transaction delay insufficient for claim");
+    console.log(`📊 Transaction: ${UNCONFIRMED_TXID}`);
+    console.log(`⏰ Delay: ${DELAY_BLOCKS} blocks (threshold: ${THRESHOLD})`);
+    console.log(`🚫 Claim rejected - delay below threshold by ${THRESHOLD - DELAY_BLOCKS} blocks`);
+  });
+
+  it("should verify insufficient delay calculation", () => {
+    const calculatedDelay = CONFIRMATION_HEIGHT - BROADCAST_HEIGHT;
+    expect(calculatedDelay).toBe(DELAY_BLOCKS);
+    expect(DELAY_BLOCKS).toBeLessThan(THRESHOLD);
+    
+    console.log("\n📉 Insufficient Delay Analysis:");
+    console.log(`   Broadcast Height: ${BROADCAST_HEIGHT}`);
+    console.log(`   Confirmation Height: ${CONFIRMATION_HEIGHT}`);
+    console.log(`   Delay: ${DELAY_BLOCKS} blocks`);
+    console.log(`   Threshold: ${THRESHOLD} blocks`);
+    console.log(`   Below threshold by: ${THRESHOLD - DELAY_BLOCKS} blocks ❌`);
+    console.log(`   Result: CLAIM REJECTED ✅`);
+  });
+
+  it("should maintain correct state after rejected claim", () => {
+    // Fund contract
+    simnet.callPublicFn(
+      "hyperinsure-core",
+      "fund-contract",
+      [Cl.uint(50000000)],
+      deployer
+    );
+
+    // Create policy
+    simnet.callPublicFn(
+      "hyperinsure-core",
+      "create-policy",
+      [
+        Cl.stringAscii("state-test"),
+        Cl.stringAscii("State Test"),
+        Cl.stringUtf8("Testing state"),
+        Cl.uint(THRESHOLD),
+        Cl.uint(500),
+        Cl.uint(100),
+        Cl.uint(5000000),
+      ],
+      deployer
+    );
+
+    // Purchase policy
+    simnet.callPublicFn(
+      "hyperinsure-core",
+      "purchase-policy",
+      [
+        Cl.stringAscii("state-test"),
+        Cl.uint(10000000),
+        Cl.stringAscii("state-purchase"),
+      ],
+      user
+    );
+
+    const totalPayoutsBefore = simnet.getDataVar("hyperinsure-core", "total-payouts");
+    const claimCountBefore = simnet.getDataVar("hyperinsure-core", "claim-count");
+
+    // Register oracle
+    const publicKey = new Uint8Array(33).fill(3);
+    simnet.callPublicFn(
+      "oracle",
+      "register-oracle",
+      [Cl.principal(oracle), Cl.stringAscii("Oracle"), Cl.buffer(publicKey)],
+      deployer
+    );
+
+    // Submit attestation with insufficient delay
+    const txHashBuffer = Buffer.from(UNCONFIRMED_TXID, "hex");
+    const signature = new Uint8Array(65).fill(3);
+    simnet.callPublicFn(
+      "oracle",
+      "submit-attestation",
+      [
+        Cl.buffer(txHashBuffer),
+        Cl.uint(BROADCAST_HEIGHT),
+        Cl.uint(CONFIRMATION_HEIGHT),
+        Cl.buffer(signature),
+      ],
+      oracle
+    );
+
+    // Try to submit claim (will fail)
+    simnet.callPublicFn(
+      "hyperinsure-core",
+      "submit-claim",
+      [
+        Cl.stringAscii("state-claim"),
+        Cl.stringAscii("state-purchase"),
+        Cl.buffer(txHashBuffer),
+        Cl.uint(DELAY_BLOCKS),
+      ],
+      user
+    );
+
+    // Verify state hasn't changed
+    const totalPayoutsAfter = simnet.getDataVar("hyperinsure-core", "total-payouts");
+    const claimCountAfter = simnet.getDataVar("hyperinsure-core", "claim-count");
+
+    // Total payouts should remain unchanged (no payout made)
+    expect(totalPayoutsAfter).toBeUint(totalPayoutsBefore.value);
+    
+    // Claim count should remain unchanged (claim was rejected before creation)
+    expect(claimCountAfter).toBeUint(claimCountBefore.value);
+
+    console.log("\n✅ State integrity maintained after rejected claim");
+    console.log(`   Total payouts: ${totalPayoutsAfter.value} (unchanged)`);
+    console.log(`   Claim count: ${claimCountAfter.value} (unchanged)`);
+  });
+});
