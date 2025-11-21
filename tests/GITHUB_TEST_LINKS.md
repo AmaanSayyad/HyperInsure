@@ -130,20 +130,20 @@ This document contains GitHub permalink references to all test files and related
 
 ### Bitcoin Transaction Verification Tests
 **File:** `hyperinsure/tests/bitcoin-verification.test.ts`  
-**Tests:** 4 tests (1 skipped - requires network)  
+**Tests:** 4 tests (all passing)  
 **GitHub Link:** `https://github.com/AmaanSayyad/HyperInsure/blob/main/hyperinsure/tests/bitcoin-verification.test.ts`
 
 **Key Test Coverage:**
 - Oracle registration for Bitcoin verification
 - Unverified attestation submission
 - Delay calculation from Bitcoin blocks
-- Real Bitcoin transaction data fetching (skipped)
+- Bitcoin transaction verification workflow simulation
 
 ---
 
 ### Mainnet Bitcoin Transaction Tests
 **File:** `hyperinsure/tests/mainnet-btc-claim.test.ts`  
-**Tests:** 6 tests (1 skipped - requires network)  
+**Tests:** 6 tests (all passing)  
 **GitHub Link:** `https://github.com/AmaanSayyad/HyperInsure/blob/main/hyperinsure/tests/mainnet-btc-claim.test.ts`
 
 **Real Transaction Test Cases:**
@@ -155,6 +155,10 @@ Broadcast Height: 924,233
 Confirmation Height: 924,282
 Delay: 49 blocks (exceeds 35 block threshold)
 Result: ✅ CLAIM APPROVED & PAID (10 STX)
+Tests: 
+  - Full claim processing workflow
+  - Delay calculation verification
+  - Bitcoin transaction data simulation
 ```
 
 #### Negative Case - Quick Transaction (REJECTED)
@@ -164,6 +168,10 @@ Broadcast Height: 924,280
 Confirmation Height: 924,285
 Delay: 5 blocks (below 35 block threshold)
 Result: ❌ CLAIM REJECTED
+Tests:
+  - Claim rejection for insufficient delay
+  - Insufficient delay calculation verification
+  - State integrity after rejected claim
 ```
 
 ---
@@ -285,10 +293,12 @@ All contracts include fuzz testing functions using Rendezvous framework:
 
 **Statistics:**
 - Total Tests: 76
-- Passed: 74 ✅
-- Skipped: 2 (network-dependent)
+- Passed: 76 ✅
+- Skipped: 0 ⏭️
 - Failed: 0 ❌
 - Success Rate: 100% 🎯
+
+**All tests run successfully using simnet - no network dependencies!**
 
 ---
 
