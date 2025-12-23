@@ -6,20 +6,17 @@
  */
 
 import {
-  callReadOnlyFunction,
+  fetchCallReadOnlyFunction,
   makeContractCall,
   broadcastTransaction,
   AnchorMode,
   PostConditionMode,
   uintCV,
-  stringAsciiCV,
-  principalCV,
   bufferCV,
   tupleCV,
   listCV,
   ClarityValue,
   cvToString,
-  hexToCV,
 } from '@stacks/transactions';
 import { StacksNetwork } from '@stacks/network';
 import { UserSession } from '@stacks/auth';
@@ -74,7 +71,7 @@ export class ContractInteractions {
     const { address, name } = parseContractId(contractAddress);
     
     try {
-      const result = await callReadOnlyFunction({
+      const result = await fetchCallReadOnlyFunction({
         contractAddress: address,
         contractName: name,
         functionName,
@@ -127,7 +124,7 @@ export class ContractInteractions {
 
     try {
       const transaction = await makeContractCall(txOptions);
-      const broadcastResponse = await broadcastTransaction(transaction, this.network);
+      const broadcastResponse = await broadcastTransaction({ transaction, network: this.network });
 
       if (APP_CONFIG.DEBUG_MODE) {
         console.log(`Contract call ${contractName}.${functionName}:`, broadcastResponse);
@@ -181,7 +178,8 @@ export class ContractInteractions {
       const result = await this.callReadOnly('POLICY_MANAGER', 'is-policy-active', [
         uintCV(policyId),
       ]);
-      return result.type === 'bool' && result.value === true;
+      // Check if result is a boolean true
+      return cvToString(result) === 'true';
     } catch (error) {
       console.error('Error checking policy status:', error);
       return false;
@@ -199,16 +197,25 @@ export class ContractInteractions {
       treeDepth: number;
     }
   ) {
+    // Helper to convert hex to Uint8Array
+    const hexToUint8Array = (hex: string): Uint8Array => {
+      const bytes = new Uint8Array(hex.length / 2);
+      for (let i = 0; i < hex.length; i += 2) {
+        bytes[i / 2] = parseInt(hex.substr(i, 2), 16);
+      }
+      return bytes;
+    };
+
     const proof = tupleCV({
       'tx-index': uintCV(merkleProof.txIndex),
-      'hashes': listCV(merkleProof.hashes.map(hash => bufferCV(Buffer.from(hash, 'hex')))),
+      'hashes': listCV(merkleProof.hashes.map(hash => bufferCV(hexToUint8Array(hash)))),
       'tree-depth': uintCV(merkleProof.treeDepth),
     });
 
     return this.makeCall('CLAIM_PROCESSOR', 'submit-claim', [
       uintCV(policyId),
-      bufferCV(Buffer.from(txHex, 'hex')),
-      bufferCV(Buffer.from(blockHeader, 'hex')),
+      bufferCV(hexToUint8Array(txHex)),
+      bufferCV(hexToUint8Array(blockHeader)),
       proof,
     ]);
   }
@@ -247,6 +254,11 @@ export class ContractInteractions {
   // Treasury Functions
   async getTreasuryBalance(): Promise<number> {
     try {
+      // Check if contract address is configured
+      if (!CONTRACT_ADDRESSES.INSURANCE_TREASURY) {
+        console.warn('INSURANCE_TREASURY contract address not configured');
+        return 0;
+      }
       const result = await this.callReadOnly('INSURANCE_TREASURY', 'get-treasury-balance');
       if (result.type === 'uint') {
         return parseInt(result.value.toString());
@@ -260,6 +272,11 @@ export class ContractInteractions {
 
   async getAvailableBalance(): Promise<number> {
     try {
+      // Check if contract address is configured
+      if (!CONTRACT_ADDRESSES.INSURANCE_TREASURY) {
+        console.warn('INSURANCE_TREASURY contract address not configured');
+        return 0;
+      }
       const result = await this.callReadOnly('INSURANCE_TREASURY', 'get-available-balance');
       if (result.type === 'uint') {
         return parseInt(result.value.toString());
@@ -365,9 +382,9 @@ export const formatAddress = (address: string): string => {
 };
 
 // Helper function to get transaction status
-export const getTransactionStatus = async (txId: string, network: StacksNetwork) => {
+export const getTransactionStatus = async (txId: string, _network: StacksNetwork) => {
   try {
-    const response = await fetch(`${network.coreApiUrl}/extended/v1/tx/${txId}`);
+    const response = await fetch(`${APP_CONFIG.STACKS_API_URL}/extended/v1/tx/${txId}`);
     const txData = await response.json();
     return txData.tx_status;
   } catch (error) {

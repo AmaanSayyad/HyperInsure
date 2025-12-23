@@ -46,7 +46,7 @@ export const DEPLOYER_ADDRESS = process.env.NEXT_PUBLIC_DEPLOYER_ADDRESS || '';
 export const APP_CONFIG = {
   NETWORK,
   STACKS_API_URL,
-  EXPLORER_URL: process.env.NEXT_PUBLIC_EXPLORER_URL || 'https://explorer.hiro.so/?chain=testnet',
+  EXPLORER_URL: process.env.NEXT_PUBLIC_EXPLORER_URL || 'https://explorer.hiro.so',
   BITCOIN_API_URL: process.env.NEXT_PUBLIC_BITCOIN_API_URL || 'https://mempool.space/testnet/api',
   
   // Policy defaults

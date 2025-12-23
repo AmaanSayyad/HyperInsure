@@ -7,13 +7,27 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { toast } from "sonner"
-import { CheckCircle, Shield, Loader2, ExternalLink } from "lucide-react"
+import { CheckCircle, Shield, Loader2 } from "lucide-react"
 import { useStacks } from "@/lib/stacks-provider"
 import { ContractInteractions, formatSTX, parseSTX } from "@/lib/contract-utils"
-import { APP_CONFIG } from "@/lib/stacks-config"
+import { APP_CONFIG, CONTRACT_ADDRESSES, parseContractId } from "@/lib/stacks-config"
+import { openContractCall } from "@stacks/connect"
+import { uintCV, AnchorMode, PostConditionMode } from "@stacks/transactions"
+
+// Policy type definition
+interface Policy {
+  id: string;
+  name: string;
+  description: string;
+  delayThreshold: number;
+  premiumPercentage: number;
+  protocolFee: number;
+  payoutPerIncident: number;
+  popular: boolean;
+}
 
 // Mock data for available policies
-const availablePolicies = [
+const availablePolicies: Policy[] = [
   {
     id: "POL-001",
     name: "Standard Transaction Delay Coverage",
@@ -48,11 +62,12 @@ const availablePolicies = [
 
 export function PolicyPurchase() {
   const { isConnected, userSession, network } = useStacks()
-  const [selectedPolicy, setSelectedPolicy] = useState(null)
+  const [selectedPolicy, setSelectedPolicy] = useState<Policy | null>(null)
   const [stxAmount, setStxAmount] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [treasuryBalance, setTreasuryBalance] = useState(0)
   const [contractInteractions, setContractInteractions] = useState<ContractInteractions | null>(null)
+  const [showClaimForm, setShowClaimForm] = useState(false)
 
   // Initialize contract interactions
   useEffect(() => {
@@ -77,13 +92,13 @@ export function PolicyPurchase() {
     fetchTreasuryBalance()
   }, [contractInteractions])
 
-  const handlePolicySelect = (policy) => {
+  const handlePolicySelect = (policy: Policy) => {
     setSelectedPolicy(policy)
     setStxAmount("")
     setShowClaimForm(false)
   }
 
-  const handlePurchase = async (e) => {
+  const handlePurchase = async (e: React.FormEvent) => {
     e.preventDefault()
     
     if (!isConnected) {
@@ -96,8 +111,9 @@ export function PolicyPurchase() {
       return
     }
 
-    if (!contractInteractions) {
-      toast.error("Contract interactions not initialized")
+    const policyManagerContract = CONTRACT_ADDRESSES.POLICY_MANAGER
+    if (!policyManagerContract) {
+      toast.error("Policy Manager contract not configured")
       return
     }
     
@@ -108,31 +124,50 @@ export function PolicyPurchase() {
       const premium = Math.floor((coverageAmount * selectedPolicy.premiumPercentage) / 10000)
       const duration = APP_CONFIG.DEFAULT_POLICY_DURATION
       
-      // Call the purchase-policy function
-      const result = await contractInteractions.purchasePolicy(
-        coverageAmount,
-        premium,
-        duration
-      )
+      const { address, name } = parseContractId(policyManagerContract)
       
-      toast.success("Policy purchase transaction submitted", {
-        description: `Transaction ID: ${result.txid}`,
-        action: {
-          label: "View",
-          onClick: () => window.open(`${APP_CONFIG.EXPLORER_URL}&txid=${result.txid}`, '_blank')
-        }
+      // Use openContractCall to open wallet popup
+      await openContractCall({
+        contractAddress: address,
+        contractName: name,
+        functionName: 'purchase-policy',
+        functionArgs: [
+          uintCV(coverageAmount),
+          uintCV(premium),
+          uintCV(duration),
+        ],
+        network: {
+          url: 'https://api.testnet.hiro.so',
+          chainId: 0x80000000, // Testnet chain ID
+        } as any,
+        anchorMode: AnchorMode.Any,
+        postConditionMode: PostConditionMode.Allow,
+        onFinish: (data) => {
+          console.log('Transaction submitted:', data)
+          toast.success("Policy purchase transaction submitted!", {
+            description: `Transaction ID: ${data.txId}`,
+            action: {
+              label: "View",
+              onClick: () => window.open(`https://explorer.hiro.so/txid/${data.txId}?chain=${APP_CONFIG.NETWORK}`, '_blank')
+            }
+          })
+          // Reset form
+          setSelectedPolicy(null)
+          setStxAmount("")
+          setIsLoading(false)
+        },
+        onCancel: () => {
+          console.log('Transaction cancelled')
+          toast.info("Transaction cancelled")
+          setIsLoading(false)
+        },
       })
-      
-      // Reset form
-      setSelectedPolicy(null)
-      setStxAmount("")
       
     } catch (error) {
       console.error('Error purchasing policy:', error)
       toast.error("Failed to purchase policy", {
-        description: error.message || "Please try again"
+        description: error instanceof Error ? error.message : "Please try again"
       })
-    } finally {
       setIsLoading(false)
     }
   }

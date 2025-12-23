@@ -17,7 +17,7 @@ import {
   cvToString,
   ClarityValue,
 } from "@stacks/transactions";
-import { StacksMainnet } from "@stacks/network";
+import { STACKS_MAINNET } from "@stacks/network";
 import { hexToBytes } from "@stacks/common";
 import { createHash } from "crypto";
 
@@ -764,7 +764,7 @@ export async function verifyBitcoinTransaction(
     throw new Error("Valid sender address is required");
   }
   
-  const mainnet = new StacksMainnet();
+  const mainnet = { ...STACKS_MAINNET, coreApiUrl: 'https://api.hiro.so' };
 
   // Clarity-bitcoin-lib-v5 contract on mainnet
   const contractAddress = "SP2PABAF9FTAJYNFZH93XENAJ8FVY99RRM50D2JG9";

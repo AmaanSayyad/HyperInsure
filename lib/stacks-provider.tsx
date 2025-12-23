@@ -7,20 +7,19 @@
  * using @stacks/connect-react for the insurance application.
  */
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { Connect } from '@stacks/connect-react';
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import { Connect, AuthOptions, useConnect } from '@stacks/connect-react';
 import { UserSession, AppConfig } from '@stacks/auth';
-import { StacksTestnet, StacksMainnet } from '@stacks/network';
+import { StacksTestnet, StacksMainnet, StacksNetwork } from '@stacks/network';
 import { APP_CONFIG } from './stacks-config';
 
 // Types
 interface StacksContextType {
-  userSession: UserSession | null;
+  userSession: UserSession;
   isConnected: boolean;
   userAddress: string | null;
-  connect: () => void;
   disconnect: () => void;
-  network: StacksTestnet | StacksMainnet;
+  network: StacksNetwork;
 }
 
 // Context
@@ -37,68 +36,66 @@ export const useStacks = () => {
 
 // App configuration for Stacks Connect
 const appConfig = new AppConfig(['store_write', 'publish_data']);
+const userSession = new UserSession({ appConfig });
 
 interface StacksProviderProps {
   children: React.ReactNode;
 }
 
 export const StacksProvider: React.FC<StacksProviderProps> = ({ children }) => {
-  const [userSession, setUserSession] = useState<UserSession | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [userAddress, setUserAddress] = useState<string | null>(null);
 
   // Initialize network
   const network = APP_CONFIG.NETWORK === 'mainnet' 
-    ? new StacksMainnet({ url: 'https://api.hiro.so' })
-    : new StacksTestnet({ url: APP_CONFIG.STACKS_API_URL });
+    ? new StacksMainnet()
+    : new StacksTestnet();
 
-  // Initialize user session
+  // Check if user is already signed in on mount
   useEffect(() => {
-    const session = new UserSession({ appConfig });
-    setUserSession(session);
-
-    // Check if user is already signed in
-    if (session.isUserSignedIn()) {
+    if (userSession.isUserSignedIn()) {
       setIsConnected(true);
-      const userData = session.loadUserData();
-      setUserAddress(userData.profile.stxAddress[APP_CONFIG.NETWORK] || null);
+      const userData = userSession.loadUserData();
+      const address = userData.profile?.stxAddress?.[APP_CONFIG.NETWORK] || 
+                      userData.profile?.stxAddress?.testnet ||
+                      userData.profile?.stxAddress?.mainnet;
+      setUserAddress(address || null);
+      
+      if (APP_CONFIG.DEBUG_MODE) {
+        console.log('User already connected:', address);
+      }
     }
   }, []);
 
-  // Connect wallet function
-  const connect = () => {
-    if (!userSession) return;
-
-    // This will be handled by the Connect component
-    // The actual connection logic is in the authOptions
-  };
-
   // Disconnect wallet function
-  const disconnect = () => {
-    if (userSession) {
-      userSession.signUserOut();
-      setIsConnected(false);
-      setUserAddress(null);
-    }
-  };
+  const disconnect = useCallback(() => {
+    userSession.signUserOut();
+    setIsConnected(false);
+    setUserAddress(null);
+    window.location.reload();
+  }, []);
 
   // Auth options for Stacks Connect
-  const authOptions = {
+  const authOptions: AuthOptions = {
     appDetails: {
       name: 'HyperInsure',
-      icon: '/logo.png', // Make sure to add your logo
+      icon: typeof window !== 'undefined' ? window.location.origin + '/logo.png' : '/logo.png',
     },
     redirectTo: '/',
     onFinish: () => {
-      if (userSession && userSession.isUserSignedIn()) {
-        setIsConnected(true);
-        const userData = userSession.loadUserData();
-        setUserAddress(userData.profile.stxAddress[APP_CONFIG.NETWORK] || null);
-        
-        if (APP_CONFIG.DEBUG_MODE) {
-          console.log('User connected:', userData.profile.stxAddress);
-        }
+      setIsConnected(true);
+      const userData = userSession.loadUserData();
+      const address = userData.profile?.stxAddress?.[APP_CONFIG.NETWORK] || 
+                      userData.profile?.stxAddress?.testnet ||
+                      userData.profile?.stxAddress?.mainnet;
+      setUserAddress(address || null);
+      
+      if (APP_CONFIG.DEBUG_MODE) {
+        console.log('User connected:', address);
       }
+    },
+    onCancel: () => {
+      console.log('User cancelled connection');
     },
     userSession,
   };
@@ -107,17 +104,16 @@ export const StacksProvider: React.FC<StacksProviderProps> = ({ children }) => {
     userSession,
     isConnected,
     userAddress,
-    connect,
     disconnect,
     network,
   };
 
   return (
-    <StacksContext.Provider value={contextValue}>
-      <Connect authOptions={authOptions}>
+    <Connect authOptions={authOptions}>
+      <StacksContext.Provider value={contextValue}>
         {children}
-      </Connect>
-    </StacksContext.Provider>
+      </StacksContext.Provider>
+    </Connect>
   );
 };
 
@@ -132,16 +128,17 @@ export const ConnectWalletButton: React.FC<ConnectWalletButtonProps> = ({
   children = 'Connect Wallet' 
 }) => {
   const { isConnected, userAddress, disconnect } = useStacks();
+  const { doOpenAuth } = useConnect();
 
   if (isConnected && userAddress) {
     return (
       <div className={`flex items-center gap-2 ${className}`}>
-        <span className="text-sm text-gray-600">
+        <span className="text-sm text-muted-foreground px-3 py-1 bg-white/10 rounded-full">
           {userAddress.slice(0, 6)}...{userAddress.slice(-4)}
         </span>
         <button
           onClick={disconnect}
-          className="px-3 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600"
+          className="px-3 py-1 text-sm bg-red-500 text-white rounded-full hover:bg-red-600"
         >
           Disconnect
         </button>
@@ -151,8 +148,8 @@ export const ConnectWalletButton: React.FC<ConnectWalletButtonProps> = ({
 
   return (
     <button
-      data-stacks-connect
-      className={`px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 ${className}`}
+      onClick={() => doOpenAuth()}
+      className={`px-4 py-2 bg-primary text-primary-foreground rounded-full hover:bg-primary/90 font-medium ${className}`}
     >
       {children}
     </button>
