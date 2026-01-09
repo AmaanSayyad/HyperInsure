@@ -473,8 +473,8 @@ export function ClaimForm() {
           }
           
           toast.custom(
-            (t) => (
-              <div className={`glass rounded-2xl p-6 border border-white/10 shadow-2xl min-w-[420px] max-w-[500px] transition-all duration-300 ${t.visible ? 'animate-in slide-in-from-top-5' : 'animate-out slide-out-to-top-5'}`}>
+            (t: any) => (
+              <div className={`glass rounded-2xl p-6 border border-white/10 shadow-2xl min-w-[420px] max-w-[500px] transition-all duration-300 ${t?.visible ? 'animate-in slide-in-from-top-5' : 'animate-out slide-out-to-top-5'}`}>
                 <div className="flex flex-col gap-5">
                   {/* Header */}
                   <div className="flex items-start gap-4">
@@ -516,7 +516,7 @@ export function ClaimForm() {
                   <button
                     onClick={() => {
                       window.open(explorerUrl, '_blank')
-                      toast.dismiss(t.id)
+                      toast.dismiss(t?.id)
                     }}
                     className="w-full flex items-center justify-center gap-2.5 px-5 py-3.5 rounded-xl bg-gradient-to-r from-secondary/20 via-secondary/15 to-secondary/10 hover:from-secondary/30 hover:via-secondary/20 hover:to-secondary/15 border border-secondary/40 hover:border-secondary/60 transition-all text-sm font-semibold text-secondary hover:text-secondary/90 group shadow-lg shadow-secondary/10 hover:shadow-secondary/20 active:scale-[0.98]"
                   >

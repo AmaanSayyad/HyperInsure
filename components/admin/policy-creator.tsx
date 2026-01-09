@@ -50,12 +50,12 @@ export function PolicyCreator() {
   })
   const [isLoading, setIsLoading] = useState(false)
 
-  const handleInputChange = (e) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
     setFormData((prev) => ({ ...prev, [name]: value }))
   }
 
-  const handleSliderChange = (name, value) => {
+  const handleSliderChange = (name: string, value: number[]) => {
     setFormData((prev) => ({ ...prev, [name]: value[0] }))
   }
 
@@ -188,8 +188,8 @@ export function PolicyCreator() {
           }
           
           toast.custom(
-            (t) => (
-              <div className={`glass rounded-2xl p-6 border border-white/10 shadow-2xl min-w-[420px] max-w-[500px] transition-all duration-300 ${t.visible ? 'animate-in slide-in-from-top-5' : 'animate-out slide-out-to-top-5'}`}>
+            (t: any) => (
+              <div className={`glass rounded-2xl p-6 border border-white/10 shadow-2xl min-w-[420px] max-w-[500px] transition-all duration-300 ${t?.visible ? 'animate-in slide-in-from-top-5' : 'animate-out slide-out-to-top-5'}`}>
                 <div className="flex flex-col gap-5">
                   {/* Header */}
                   <div className="flex items-start gap-4">
@@ -231,7 +231,7 @@ export function PolicyCreator() {
                   <button
                     onClick={() => {
                       window.open(explorerUrl, '_blank')
-                      toast.dismiss(t.id)
+                      toast.dismiss(t?.id)
                     }}
                     className="w-full flex items-center justify-center gap-2.5 px-5 py-3.5 rounded-xl bg-gradient-to-r from-primary/20 via-primary/15 to-primary/10 hover:from-primary/30 hover:via-primary/20 hover:to-primary/15 border border-primary/40 hover:border-primary/60 transition-all text-sm font-semibold text-primary hover:text-primary/90 group shadow-lg shadow-primary/10 hover:shadow-primary/20 active:scale-[0.98]"
                   >

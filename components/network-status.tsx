@@ -15,7 +15,7 @@ import {
   Copy,
   Check
 } from 'lucide-react';
-import { APP_CONFIG, CONTRACT_ADDRESSES, validateConfig } from '@/lib/stacks-config';
+import { APP_CONFIG, CONTRACT_ADDRESSES, validateConfig, DEPLOYER_ADDRESS } from '@/lib/stacks-config';
 import { ConnectWalletButton } from '@/lib/stacks-provider';
 
 const CONTRACT_LABELS: Record<string, string> = {
@@ -44,7 +44,7 @@ export const NetworkStatus: React.FC = () => {
   }, []);
 
   const contractEntries = Object.entries(CONTRACT_ADDRESSES).filter(([_, address]) => address);
-  const deployerAddress = APP_CONFIG.DEPLOYER_ADDRESS;
+  const deployerAddress = DEPLOYER_ADDRESS;
 
   const copyToClipboard = (text: string, id: string) => {
     navigator.clipboard.writeText(text);

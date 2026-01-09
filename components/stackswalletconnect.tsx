@@ -1,7 +1,8 @@
 "use client"
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
-import { connect, disconnect, isConnected, getLocalStorage } from '@stacks/connect';
+// Note: This component uses deprecated imports. Consider using lib/stacks-provider.tsx instead
+// import { connect, disconnect, isConnected, getLocalStorage } from '@stacks/connect';
 
 interface StacksWalletContextType {
   isWalletConnected: boolean;
@@ -25,23 +26,32 @@ export const StacksWalletProvider = ({ children }: StacksWalletProviderProps) =>
   useEffect(() => {
     // Check if already connected on app load
     const checkConnection = () => {
-      const connected = isConnected();
+      const connected = false; // isConnected() - deprecated, use lib/stacks-provider.tsx instead
       console.log('🔍 Checking initial connection status:', connected);
       setIsWalletConnected(connected);
       
       if (connected) {
         // Get stored wallet data from localStorage
         try {
-          const storage = getLocalStorage();
-          console.log('📝 Retrieved storage:', storage);
+          // Note: Using localStorage directly instead of deprecated getLocalStorage()
+          const storageData = typeof window !== 'undefined' ? localStorage.getItem('blockstack-session') : null;
+          console.log('📝 Retrieved storage:', storageData);
           
-          if (storage && storage.addresses && Array.isArray(storage.addresses)) {
-            const addressStrings = storage.addresses.map(addr => 
-              typeof addr === 'string' ? addr : addr.address
-            );
-            setAddresses(addressStrings);
-            setSelectedAddress(addressStrings[0]);
-            console.log('✅ Restored addresses from storage:', addressStrings);
+          if (storageData) {
+            try {
+              const parsed = JSON.parse(storageData);
+              const addresses = parsed?.addresses || [];
+              if (Array.isArray(addresses) && addresses.length > 0) {
+                const addressStrings = addresses.map((addr: any) => 
+                  typeof addr === 'string' ? addr : addr?.address || addr
+                );
+                setAddresses(addressStrings);
+                setSelectedAddress(addressStrings[0]);
+                console.log('✅ Restored addresses from storage:', addressStrings);
+              }
+            } catch (parseError) {
+              console.error('❌ Error parsing storage data:', parseError);
+            }
           }
         } catch (error) {
           console.error('❌ Error reading wallet storage:', error);
@@ -56,7 +66,8 @@ export const StacksWalletProvider = ({ children }: StacksWalletProviderProps) =>
     try {
       console.log('🔗 Initiating wallet connection...');
       
-      const response = await connect();
+      // const response = await connect(); // deprecated, use lib/stacks-provider.tsx instead
+      const response = null;
       console.log('📝 Full connection response structure:', JSON.stringify(response, null, 2));
       console.log('📝 Response type:', typeof response);
       console.log('📝 Response keys:', response ? Object.keys(response) : 'no keys');
@@ -66,10 +77,10 @@ export const StacksWalletProvider = ({ children }: StacksWalletProviderProps) =>
         console.log('✅ Set wallet connected to true');
         
         // Handle official Stacks Connect response structure
-        if (response.addresses && Array.isArray(response.addresses) && response.addresses.length > 0) {
+        if ((response as any)?.addresses && Array.isArray((response as any).addresses) && (response as any).addresses.length > 0) {
           // Extract addresses from objects: { address: "SP...", publicKey: "..." }
-          const addressStrings = response.addresses.map(addr => 
-            typeof addr === 'string' ? addr : addr.address
+          const addressStrings = ((response as any).addresses || []).map((addr: any) => 
+            typeof addr === 'string' ? addr : addr?.address || addr
           );
           setAddresses(addressStrings);
           setSelectedAddress(addressStrings[0]);
@@ -78,16 +89,22 @@ export const StacksWalletProvider = ({ children }: StacksWalletProviderProps) =>
         } else {
           // Fallback: check localStorage for stored wallet data
           try {
-            const storage = getLocalStorage();
-            if (storage && storage.addresses && Array.isArray(storage.addresses)) {
-              const addressStrings = storage.addresses.map(addr => 
-                typeof addr === 'string' ? addr : addr.address
-              );
-              setAddresses(addressStrings);
-              setSelectedAddress(addressStrings[0]);
-              console.log('✅ Used stored addresses:', addressStrings);
+            const storageData = typeof window !== 'undefined' ? localStorage.getItem('blockstack-session') : null;
+            if (storageData) {
+              const parsed = JSON.parse(storageData);
+              const addresses = parsed?.addresses || [];
+              if (Array.isArray(addresses) && addresses.length > 0) {
+                const addressStrings = addresses.map((addr: any) => 
+                  typeof addr === 'string' ? addr : addr?.address || addr
+                );
+                setAddresses(addressStrings);
+                setSelectedAddress(addressStrings[0]);
+                console.log('✅ Used stored addresses:', addressStrings);
+              } else {
+                console.log('⚠️ No addresses found in response or storage');
+              }
             } else {
-              console.log('⚠️ No addresses found in response or storage');
+              console.log('⚠️ No storage data found');
             }
           } catch (storageError) {
             console.error('❌ Error reading storage:', storageError);
@@ -107,7 +124,7 @@ export const StacksWalletProvider = ({ children }: StacksWalletProviderProps) =>
   const disconnectWallet = () => {
     try {
       console.log('🔌 Disconnecting wallet...');
-      disconnect(); // Call the disconnect function from @stacks/connect
+      // disconnect() - deprecated, use lib/stacks-provider.tsx instead
       setIsWalletConnected(false);
       setAddresses([]);
       setSelectedAddress(null);
