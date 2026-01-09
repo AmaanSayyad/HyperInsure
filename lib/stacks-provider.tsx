@@ -46,24 +46,44 @@ export const StacksProvider: React.FC<StacksProviderProps> = ({ children }) => {
   const [isConnected, setIsConnected] = useState(false);
   const [userAddress, setUserAddress] = useState<string | null>(null);
 
-  // Initialize network
+  // Initialize network with API URL
   const network = APP_CONFIG.NETWORK === 'mainnet' 
-    ? new StacksMainnet()
-    : new StacksTestnet();
+    ? new StacksMainnet({ url: 'https://api.hiro.so' })
+    : new StacksTestnet({ url: APP_CONFIG.STACKS_API_URL || 'https://api.testnet.hiro.so' });
 
   // Check if user is already signed in on mount
   useEffect(() => {
-    if (userSession.isUserSignedIn()) {
-      setIsConnected(true);
-      const userData = userSession.loadUserData();
-      const address = userData.profile?.stxAddress?.[APP_CONFIG.NETWORK] || 
-                      userData.profile?.stxAddress?.testnet ||
-                      userData.profile?.stxAddress?.mainnet;
-      setUserAddress(address || null);
-      
-      if (APP_CONFIG.DEBUG_MODE) {
-        console.log('User already connected:', address);
+    // Only run in browser environment
+    if (typeof window === 'undefined') return;
+    
+    try {
+      if (userSession.isUserSignedIn()) {
+        setIsConnected(true);
+        const userData = userSession.loadUserData();
+        const address = userData.profile?.stxAddress?.[APP_CONFIG.NETWORK] || 
+                        userData.profile?.stxAddress?.testnet ||
+                        userData.profile?.stxAddress?.mainnet;
+        setUserAddress(address || null);
+        
+        if (APP_CONFIG.DEBUG_MODE) {
+          console.log('User already connected:', address);
+        }
       }
+    } catch (error) {
+      // Handle corrupted session data
+      console.error('Error loading session data:', error);
+      // Clear corrupted session data
+      try {
+        userSession.signUserOut();
+      } catch (signOutError) {
+        // If sign out fails, try to clear localStorage directly
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('blockstack-session');
+          localStorage.removeItem('blockstack');
+        }
+      }
+      setIsConnected(false);
+      setUserAddress(null);
     }
   }, []);
 
@@ -83,15 +103,21 @@ export const StacksProvider: React.FC<StacksProviderProps> = ({ children }) => {
     },
     redirectTo: '/',
     onFinish: () => {
-      setIsConnected(true);
-      const userData = userSession.loadUserData();
-      const address = userData.profile?.stxAddress?.[APP_CONFIG.NETWORK] || 
-                      userData.profile?.stxAddress?.testnet ||
-                      userData.profile?.stxAddress?.mainnet;
-      setUserAddress(address || null);
-      
-      if (APP_CONFIG.DEBUG_MODE) {
-        console.log('User connected:', address);
+      try {
+        setIsConnected(true);
+        const userData = userSession.loadUserData();
+        const address = userData.profile?.stxAddress?.[APP_CONFIG.NETWORK] || 
+                        userData.profile?.stxAddress?.testnet ||
+                        userData.profile?.stxAddress?.mainnet;
+        setUserAddress(address || null);
+        
+        if (APP_CONFIG.DEBUG_MODE) {
+          console.log('User connected:', address);
+        }
+      } catch (error) {
+        console.error('Error loading user data:', error);
+        setIsConnected(false);
+        setUserAddress(null);
       }
     },
     onCancel: () => {
@@ -130,6 +156,20 @@ export const ConnectWalletButton: React.FC<ConnectWalletButtonProps> = ({
   const { isConnected, userAddress, disconnect } = useStacks();
   const { doOpenAuth } = useConnect();
 
+  const handleConnect = async () => {
+    try {
+      await doOpenAuth();
+    } catch (error: any) {
+      // Silently handle user cancellation - this is expected behavior
+      if (error?.message === 'cancel' || error === 'cancel') {
+        // User cancelled, do nothing
+        return;
+      }
+      // Log other errors for debugging
+      console.error('Wallet connection error:', error);
+    }
+  };
+
   if (isConnected && userAddress) {
     return (
       <div className={`flex items-center gap-2 ${className}`}>
@@ -148,7 +188,7 @@ export const ConnectWalletButton: React.FC<ConnectWalletButtonProps> = ({
 
   return (
     <button
-      onClick={() => doOpenAuth()}
+      onClick={handleConnect}
       className={`px-4 py-2 bg-primary text-primary-foreground rounded-full hover:bg-primary/90 font-medium ${className}`}
     >
       {children}
