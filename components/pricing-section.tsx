@@ -1,205 +1,175 @@
 "use client"
 
-import { useState } from "react"
-import { Check } from "lucide-react"
+import { Check, Sparkles, Zap, Crown } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import Link from "next/link"
 
 export function PricingSection() {
-  const [isAnnual, setIsAnnual] = useState(true)
-
   const pricingPlans = [
     {
-      name: "Basic",
-      monthlyPrice: "10 STX",
-      annualPrice: "100 STX",
-      description: "Essential protection for casual blockchain users.",
+      name: "Starter",
+      icon: Zap,
+      delayThreshold: "35 blocks",
+      premiumRate: "2%",
+      protocolFee: "1%",
+      payoutPerIncident: "500 STX",
+      description: "Perfect for casual transactions",
       features: [
-        "Coverage up to 100 STX per transaction",
-        "Max 30 minute delay protection",
-        "Standard mempool monitoring",
-        "Basic transaction tracking",
-        "Email notifications",
+        "35 block delay threshold",
+        "2% premium rate",
+        "Standard support",
       ],
-      buttonText: "Get Coverage",
-      buttonClass:
-        "bg-zinc-300 shadow-[0px_1px_1px_-0.5px_rgba(16,24,40,0.20)] outline outline-0.5 outline-[#1e29391f] outline-offset-[-0.5px] text-gray-800 text-shadow-[0px_1px_1px_rgba(16,24,40,0.08)] hover:bg-zinc-400",
+      buttonText: "Get Started",
+      popular: false,
     },
     {
-      name: "Premium",
-      monthlyPrice: "50 STX",
-      annualPrice: "500 STX",
-      description: "Comprehensive coverage for active traders.",
+      name: "Professional",
+      icon: Sparkles,
+      delayThreshold: "30 blocks",
+      premiumRate: "3%",
+      protocolFee: "1.5%",
+      payoutPerIncident: "1,000 STX",
+      description: "For active traders",
       features: [
-        "Coverage up to 1000 STX per transaction",
-        "Max 60 minute delay protection",
-        "Priority mempool monitoring",
-        "Advanced transaction tracking",
-        "Real-time notifications",
-        "Cross-chain transaction coverage",
-        "Gas price spike protection",
+        "30 block delay threshold",
+        "3% premium rate",
+        "Priority support",
+        "Advanced analytics",
       ],
-      buttonText: "Get Premium",
-      buttonClass:
-        "bg-primary-foreground shadow-[0px_1px_1px_-0.5px_rgba(16,24,40,0.20)] text-primary text-shadow-[0px_1px_1px_rgba(16,24,40,0.08)] hover:bg-primary-foreground/90",
+      buttonText: "Go Pro",
       popular: true,
     },
     {
       name: "Enterprise",
-      monthlyPrice: "Custom",
-      annualPrice: "Custom",
-      description: "Tailored solutions for institutional users.",
+      icon: Crown,
+      delayThreshold: "40 blocks",
+      premiumRate: "2.5%",
+      protocolFee: "1.2%",
+      payoutPerIncident: "750 STX",
+      description: "Maximum protection",
       features: [
-        "Unlimited coverage amounts",
-        "Custom delay thresholds",
-        "Dedicated mempool monitoring",
-        "Multi-signature transaction support",
-        "Custom SLA guarantees",
-        "API integration for automated claims",
+        "40 block delay threshold",
+        "2.5% premium rate",
+        "24/7 premium support",
+        "Custom SLAs",
       ],
-      buttonText: "Contact Us",
-      buttonClass:
-        "bg-secondary shadow-[0px_1px_1px_-0.5px_rgba(16,24,40,0.20)] text-secondary-foreground text-shadow-[0px_1px_1px_rgba(16,24,40,0.08)] hover:bg-secondary/90",
+      buttonText: "Contact Sales",
+      popular: false,
     },
   ]
 
   return (
-    <section className="w-full px-5 overflow-hidden flex flex-col justify-start items-center my-0 py-8 md:py-14">
-      <div className="self-stretch relative flex flex-col justify-center items-center gap-2 py-0">
-        <div className="flex flex-col justify-start items-center gap-4">
-          <h2 className="text-center text-foreground text-4xl md:text-5xl font-semibold leading-tight md:leading-[40px]">
-            Insurance Plans for Every Blockchain User
+    <section className="w-full px-6 py-24 relative overflow-hidden">
+      {/* Background Elements */}
+      <div className="absolute inset-0 -z-10">
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-accent/10 rounded-full blur-3xl" />
+      </div>
+
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="text-center mb-16 space-y-4">
+          <h2 className="text-4xl md:text-6xl font-bold">
+            <span className="text-foreground">Choose Your </span>
+            <span className="text-gradient">Coverage Plan</span>
           </h2>
-          <p className="self-stretch text-center text-muted-foreground text-sm font-medium leading-tight">
-            Choose a coverage plan that fits your transaction needs, from casual users to <br /> active traders
-            and institutional clients.
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            Select the protection level that fits your transaction needs
           </p>
         </div>
-        <div className="pt-4">
-          <div className="p-0.5 bg-muted rounded-lg outline outline-1 outline-[#0307120a] outline-offset-[-1px] flex justify-start items-center gap-1 md:mt-0">
-            <button
-              onClick={() => setIsAnnual(true)}
-              className={`pl-2 pr-1 py-1 flex justify-start items-start gap-2 rounded-md ${isAnnual ? "bg-accent shadow-[0px_1px_1px_-0.5px_rgba(0,0,0,0.08)]" : ""}`}
-            >
-              <span
-                className={`text-center text-sm font-medium leading-tight ${isAnnual ? "text-accent-foreground" : "text-zinc-400"}`}
+
+        {/* Coverage Plan Cards */}
+        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          {pricingPlans.map((plan) => {
+            const Icon = plan.icon
+            return (
+              <div
+                key={plan.name}
+                className={`relative rounded-3xl p-8 ${
+                  plan.popular
+                    ? "bg-gradient-to-b from-primary/20 to-transparent border-2 border-primary/50 shadow-2xl shadow-primary/20 scale-105"
+                    : "glass border border-white/10"
+                }`}
               >
-                Annual
-              </span>
-            </button>
-            <button
-              onClick={() => setIsAnnual(false)}
-              className={`px-2 py-1 flex justify-start items-start rounded-md ${!isAnnual ? "bg-accent shadow-[0px_1px_1px_-0.5px_rgba(0,0,0,0.08)]" : ""}`}
-            >
-              <span
-                className={`text-center text-sm font-medium leading-tight ${!isAnnual ? "text-accent-foreground" : "text-zinc-400"}`}
-              >
-                Monthly
-              </span>
-            </button>
-          </div>
-        </div>
-      </div>
-      <div className="self-stretch px-5 flex flex-col md:flex-row justify-start items-start gap-4 md:gap-6 mt-6 max-w-[1100px] mx-auto">
-        {pricingPlans.map((plan) => (
-          <div
-            key={plan.name}
-            className={`flex-1 p-4 overflow-hidden rounded-xl flex flex-col justify-start items-start gap-6 ${plan.popular ? "bg-primary shadow-[0px_4px_8px_-2px_rgba(0,0,0,0.10)]" : "bg-gradient-to-b from-gray-50/5 to-gray-50/0"}`}
-            style={plan.popular ? {} : { outline: "1px solid hsl(var(--border))", outlineOffset: "-1px" }}
-          >
-            <div className="self-stretch flex flex-col justify-start items-start gap-6">
-              <div className="self-stretch flex flex-col justify-start items-start gap-8">
-                <div
-                  className={`w-full h-5 text-sm font-medium leading-tight ${plan.popular ? "text-primary-foreground" : "text-zinc-200"}`}
-                >
-                  {plan.name}
-                  {plan.popular && (
-                    <div className="ml-2 px-2 overflow-hidden rounded-full justify-center items-center gap-2.5 inline-flex mt-0 py-0.5 bg-gradient-to-b from-primary-light/50 to-primary-light bg-white">
-                      <div className="text-center text-primary-foreground text-xs font-normal leading-tight break-words">
-                        Popular
+                {plan.popular && (
+                  <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+                    <span className="px-4 py-1 bg-primary text-primary-foreground text-xs font-bold rounded-full">
+                      MOST POPULAR
+                    </span>
+                  </div>
+                )}
+
+                <div className="space-y-6">
+                  {/* Icon & Name */}
+                  <div className="flex items-center gap-3">
+                    <div className={`p-3 rounded-xl ${
+                      plan.popular 
+                        ? "bg-primary/20" 
+                        : "bg-white/5"
+                    }`}>
+                      <Icon className={`w-6 h-6 ${
+                        plan.popular ? "text-primary" : "text-foreground"
+                      }`} />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-foreground">{plan.name}</h3>
+                      <p className="text-sm text-muted-foreground">{plan.description}</p>
+                    </div>
+                  </div>
+
+                  {/* Price */}
+                  <div className="py-4 space-y-3">
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-4xl font-bold text-gradient">
+                        {plan.premiumRate}
+                      </span>
+                      <span className="text-muted-foreground text-sm">premium rate</span>
+                    </div>
+                    <div className="space-y-1.5 text-sm">
+                      <div className="flex items-center justify-between">
+                        <span className="text-muted-foreground">Delay Threshold:</span>
+                        <span className="font-semibold text-foreground">{plan.delayThreshold}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-muted-foreground">Protocol Fee:</span>
+                        <span className="font-semibold text-foreground">{plan.protocolFee}</span>
                       </div>
                     </div>
-                  )}
-                </div>
-                <div className="self-stretch flex flex-col justify-start items-start gap-1">
-                  <div className="flex justify-start items-center gap-1.5">
-                    <div
-                      className={`relative h-10 flex items-center text-3xl font-medium leading-10 ${plan.popular ? "text-primary-foreground" : "text-zinc-50"}`}
-                    >
-                      <span className="invisible">{isAnnual ? plan.annualPrice : plan.monthlyPrice}</span>
-                      <span
-                        className="absolute inset-0 flex items-center transition-all duration-500"
-                        style={{
-                          opacity: isAnnual ? 1 : 0,
-                          transform: `scale(${isAnnual ? 1 : 0.8})`,
-                          filter: `blur(${isAnnual ? 0 : 4}px)`,
-                        }}
-                        aria-hidden={!isAnnual}
-                      >
-                        {plan.annualPrice}
-                      </span>
-                      <span
-                        className="absolute inset-0 flex items-center transition-all duration-500"
-                        style={{
-                          opacity: !isAnnual ? 1 : 0,
-                          transform: `scale(${!isAnnual ? 1 : 0.8})`,
-                          filter: `blur(${!isAnnual ? 0 : 4}px)`,
-                        }}
-                        aria-hidden={isAnnual}
-                      >
-                        {plan.monthlyPrice}
-                      </span>
-                    </div>
-                    <div
-                      className={`text-center text-sm font-medium leading-tight ${plan.popular ? "text-primary-foreground/70" : "text-zinc-400"}`}
-                    >
-                      /month
-                    </div>
                   </div>
-                  <div
-                    className={`self-stretch text-sm font-medium leading-tight ${plan.popular ? "text-primary-foreground/70" : "text-zinc-400"}`}
-                  >
-                    {plan.description}
+
+                  {/* CTA Button */}
+                  <Link href="/purchase">
+                    <Button
+                      className={`w-full rounded-xl py-6 font-semibold text-base ${
+                        plan.popular
+                          ? "bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/30"
+                          : "glass hover:bg-white/10 border border-white/10"
+                      }`}
+                    >
+                      {plan.buttonText}
+                    </Button>
+                  </Link>
+
+                  {/* Features */}
+                  <div className="space-y-3 pt-4">
+                    {plan.features.map((feature) => (
+                      <div key={feature} className="flex items-start gap-3">
+                        <div className={`mt-1 p-1 rounded-full ${
+                          plan.popular ? "bg-primary/20" : "bg-white/5"
+                        }`}>
+                          <Check className={`w-3 h-3 ${
+                            plan.popular ? "text-primary" : "text-foreground"
+                          }`} />
+                        </div>
+                        <span className="text-sm text-muted-foreground">{feature}</span>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
-              <Button
-                className={`self-stretch px-5 py-2 rounded-[40px] flex justify-center items-center ${plan.buttonClass}`}
-              >
-                <div className="px-1.5 flex justify-center items-center gap-2">
-                  <span
-                    className={`text-center text-sm font-medium leading-tight ${plan.name === "Free" ? "text-gray-800" : plan.name === "Pro" ? "text-primary" : "text-zinc-950"}`}
-                  >
-                    {plan.buttonText}
-                  </span>
-                </div>
-              </Button>
-            </div>
-            <div className="self-stretch flex flex-col justify-start items-start gap-4">
-              <div
-                className={`self-stretch text-sm font-medium leading-tight ${plan.popular ? "text-primary-foreground/70" : "text-muted-foreground"}`}
-              >
-                {plan.name === "Basic" ? "Basic coverage includes:" : plan.name === "Premium" ? "Premium coverage includes:" : "Enterprise coverage includes:"}
-              </div>
-              <div className="self-stretch flex flex-col justify-start items-start gap-3">
-                {plan.features.map((feature) => (
-                  <div key={feature} className="self-stretch flex justify-start items-center gap-2">
-                    <div className="w-4 h-4 flex items-center justify-center">
-                      <Check
-                        className={`w-full h-full ${plan.popular ? "text-primary-foreground" : "text-muted-foreground"}`}
-                        strokeWidth={2}
-                      />
-                    </div>
-                    <div
-                      className={`leading-tight font-normal text-sm text-left ${plan.popular ? "text-primary-foreground" : "text-muted-foreground"}`}
-                    >
-                      {feature}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        ))}
+            )
+          })}
+        </div>
       </div>
     </section>
   )
