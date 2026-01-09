@@ -14,6 +14,11 @@ export const metadata: Metadata = {
   generator: 'HyperInsure',
   keywords: ['Bitcoin', 'Insurance', 'DeFi', 'Stacks', 'Blockchain', 'Trustless'],
   authors: [{ name: 'HyperInsure Team' }],
+  icons: {
+    icon: '/thunder.ico',
+    shortcut: '/thunder.ico',
+    apple: '/thunder.ico',
+  },
   openGraph: {
     title: 'HyperInsure - Trustless Bitcoin Transaction Insurance',
     description: 'Decentralized insurance for Bitcoin transaction delays using cryptographic proofs',
