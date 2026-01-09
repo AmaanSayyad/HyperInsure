@@ -1,24 +1,30 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { toast } from "sonner"
-import { AlertCircle, CheckCircle, Loader2, ExternalLink, XCircle, Clock } from "lucide-react"
+import { AlertCircle, CheckCircle, Loader2, ExternalLink, XCircle, Clock, Shield, FileText, Copy } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { useStacks } from "@/lib/stacks-provider"
 import { APP_CONFIG, CONTRACT_ADDRESSES, parseContractId } from "@/lib/stacks-config"
+import { ContractInteractions, formatSTX } from "@/lib/contract-utils"
 import { openContractCall } from "@stacks/connect"
-import { uintCV, bufferCV, tupleCV, listCV, AnchorMode, PostConditionMode } from "@stacks/transactions"
+import { uintCV, bufferCV, tupleCV, listCV, stringAsciiCV, AnchorMode, PostConditionMode } from "@stacks/transactions"
+import Link from "next/link"
 
-// Insurance configuration
-const INSURANCE_CONFIG = {
-  DELAY_THRESHOLD_BLOCKS: 35, // Minimum blocks delay for claim eligibility
-  MIN_CONFIRMATIONS: 6,       // Minimum confirmations required
-  LOW_FEE_THRESHOLD: 5,       // sat/vB - transactions below this are considered "low fee"
-  EXPECTED_BLOCK_TIME: 10,    // minutes per block
+interface UserPurchase {
+  purchaseId: string
+  policyId: string
+  policyName: string
+  delayThreshold: number
+  coverageAmount: number
+  premiumPaid: number
+  purchaseDate: Date
+  expiryDate: Date
+  status: "active" | "expired"
 }
 
 interface TransactionData {
@@ -32,7 +38,6 @@ interface TransactionData {
   fee: number
   size: number
   weight: number
-  firstSeen?: number // Timestamp when TX was first seen in mempool (if available)
 }
 
 interface DelayAnalysis {
@@ -56,21 +61,136 @@ interface ClaimResult {
   fee: number
   txSize: number
   rejectionReason?: string
+  requiredDelayThreshold?: number
+}
+
+const INSURANCE_CONFIG = {
+  DELAY_THRESHOLD_BLOCKS: 35,
+  MIN_CONFIRMATIONS: 6,
+  LOW_FEE_THRESHOLD: 5,
+  EXPECTED_BLOCK_TIME: 10,
+}
+
+// Generate unique claim ID
+const generateClaimId = (): string => {
+  return `CLM-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`
 }
 
 export function ClaimForm() {
-  const { isConnected } = useStacks()
+  const { isConnected, userAddress, userSession, network } = useStacks()
+  const [selectedPurchaseId, setSelectedPurchaseId] = useState("")
+  const [userPurchases, setUserPurchases] = useState<UserPurchase[]>([])
   const [txid, setTxid] = useState("")
-  const [policyId, setPolicyId] = useState("")
   const [broadcastHeight, setBroadcastHeight] = useState("")
   const [loading, setLoading] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [claimResult, setClaimResult] = useState<ClaimResult | null>(null)
   const [txData, setTxData] = useState<TransactionData | null>(null)
+  const [contractInteractions, setContractInteractions] = useState<ContractInteractions | null>(null)
+  const [loadingPurchases, setLoadingPurchases] = useState(false)
+
+  // Initialize contract interactions
+  useEffect(() => {
+    if (network && userSession) {
+      try {
+        setContractInteractions(new ContractInteractions(network, userSession))
+      } catch (error) {
+        console.error("Error initializing contract interactions:", error)
+      }
+    }
+  }, [network, userSession])
+
+  // Fetch user purchases
+  useEffect(() => {
+    const fetchUserPurchases = async () => {
+      if (!isConnected || !userAddress || !contractInteractions || !network) {
+        setUserPurchases([])
+        return
+      }
+
+      setLoadingPurchases(true)
+      try {
+        const storageKey = `hyperinsure_purchases_${userAddress}`
+        const storedPurchases = localStorage.getItem(storageKey)
+        const purchaseIds: string[] = storedPurchases ? JSON.parse(storedPurchases) : []
+        
+        console.log(`Found ${purchaseIds.length} purchase IDs for user ${userAddress}:`, purchaseIds)
+
+        const purchases: UserPurchase[] = []
+
+        for (const purchaseId of purchaseIds) {
+          try {
+            const purchaseData = await contractInteractions.getPurchaseV2(purchaseId)
+            if (purchaseData && purchaseData !== null) {
+              const purchaser = purchaseData.purchaser?.value || purchaseData.purchaser
+              if (purchaser === userAddress) {
+                const policyId = purchaseData["policy-id"]?.value || purchaseData["policy-id"] || ""
+                const policyData = await contractInteractions.getPolicyV2(policyId)
+                
+                if (policyData) {
+                  const createdAt = parseInt(
+                    purchaseData["created-at"]?.value?.toString() || 
+                    purchaseData["created-at"]?.toString() || 
+                    "0"
+                  )
+                  const expiry = parseInt(
+                    purchaseData.expiry?.value?.toString() || 
+                    purchaseData.expiry?.toString() || 
+                    "0"
+                  )
+                  
+                  const blocksToMs = 600000
+                  const purchaseDate = new Date(Date.now() - (createdAt * blocksToMs))
+                  const expiryDate = new Date(Date.now() + ((expiry - createdAt) * blocksToMs))
+                  
+                  const now = Date.now()
+                  const isExpired = expiryDate.getTime() < now
+                  
+                  purchases.push({
+                    purchaseId,
+                    policyId,
+                    policyName: policyData.name?.value || policyData.name || policyId,
+                    delayThreshold: parseInt(
+                      policyData["delay-threshold"]?.value?.toString() || 
+                      policyData["delay-threshold"]?.toString() || 
+                      "35"
+                    ),
+                    coverageAmount: parseInt(
+                      purchaseData["stx-amount"]?.value?.toString() || 
+                      purchaseData["stx-amount"]?.toString() || 
+                      "0"
+                    ),
+                    premiumPaid: parseInt(
+                      purchaseData["premium-paid"]?.value?.toString() || 
+                      purchaseData["premium-paid"]?.toString() || 
+                      "0"
+                    ),
+                    purchaseDate,
+                    expiryDate,
+                    status: isExpired ? "expired" : "active"
+                  })
+                }
+              }
+            }
+          } catch (error) {
+            console.error(`Error fetching purchase ${purchaseId}:`, error)
+          }
+        }
+
+        setUserPurchases(purchases.filter(p => p.status === "active"))
+        console.log(`Loaded ${purchases.filter(p => p.status === "active").length} active purchases`)
+      } catch (error) {
+        console.error("Error fetching user purchases:", error)
+        toast.error("Failed to load your purchases")
+      } finally {
+        setLoadingPurchases(false)
+      }
+    }
+
+    fetchUserPurchases()
+  }, [isConnected, userAddress, contractInteractions, network])
 
   const fetchBitcoinTx = async (txid: string): Promise<TransactionData> => {
-    console.log("Fetching Bitcoin TX:", txid)
-    
     const apis = [
       `https://blockstream.info/api/tx/${txid}`,
       `https://mempool.space/api/tx/${txid}`,
@@ -78,7 +198,6 @@ export function ClaimForm() {
     
     for (const apiUrl of apis) {
       try {
-        console.log("Trying API:", apiUrl)
         const controller = new AbortController()
         const timeoutId = setTimeout(() => controller.abort(), 15000)
         
@@ -91,7 +210,6 @@ export function ClaimForm() {
         if (!response.ok) continue
         
         const data = await response.json()
-        console.log("TX Data from", apiUrl, ":", data)
         
         return {
           txid: data.txid,
@@ -137,43 +255,39 @@ export function ClaimForm() {
     throw new Error("Could not fetch current block height.")
   }
 
-  // Analyze transaction delay for insurance eligibility
   const analyzeDelay = (
     tx: TransactionData, 
     currentHeight: number,
-    userBroadcastHeight?: number
+    userBroadcastHeight?: number,
+    requiredThreshold?: number
   ): DelayAnalysis => {
     const confirmationHeight = tx.status.block_height
     const vsize = tx.weight ? Math.ceil(tx.weight / 4) : tx.size
     const feeRate = vsize > 0 ? tx.fee / vsize : 0
     const isLowFee = feeRate < INSURANCE_CONFIG.LOW_FEE_THRESHOLD
     
-    // Calculate delay
     let estimatedBroadcastHeight: number
     let reason: string
     
     if (userBroadcastHeight && userBroadcastHeight > 0) {
-      // User provided broadcast height
       estimatedBroadcastHeight = userBroadcastHeight
       reason = "User-provided broadcast height"
     } else if (isLowFee) {
-      // Low fee transactions likely waited in mempool
-      // Estimate based on fee rate - lower fee = longer wait
       const estimatedWaitBlocks = Math.max(
-        INSURANCE_CONFIG.DELAY_THRESHOLD_BLOCKS,
-        Math.floor(50 / (feeRate + 0.1)) // Lower fee = more blocks waited
+        requiredThreshold || INSURANCE_CONFIG.DELAY_THRESHOLD_BLOCKS,
+        Math.floor(50 / (feeRate + 0.1))
       )
       estimatedBroadcastHeight = confirmationHeight - estimatedWaitBlocks
       reason = `Low fee rate (${feeRate.toFixed(2)} sat/vB) suggests mempool delay`
     } else {
-      // Normal/high fee - assume quick confirmation (1-3 blocks)
       estimatedBroadcastHeight = confirmationHeight - 2
       reason = `Normal fee rate (${feeRate.toFixed(2)} sat/vB) - quick confirmation expected`
     }
     
     const delayBlocks = confirmationHeight - estimatedBroadcastHeight
     const delayMinutes = delayBlocks * INSURANCE_CONFIG.EXPECTED_BLOCK_TIME
-    const isDelayed = delayBlocks >= INSURANCE_CONFIG.DELAY_THRESHOLD_BLOCKS
+    const threshold = requiredThreshold || INSURANCE_CONFIG.DELAY_THRESHOLD_BLOCKS
+    const isDelayed = delayBlocks >= threshold
     
     return {
       estimatedBroadcastHeight,
@@ -190,12 +304,16 @@ export function ClaimForm() {
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault()
     
+    if (!selectedPurchaseId) {
+      toast.error("Please select a policy purchase")
+      return
+    }
+
     if (!txid) {
       toast.error("Please enter a Bitcoin transaction ID")
       return
     }
     
-    // Validate txid format (64 hex characters)
     const cleanTxid = txid.trim().toLowerCase().replace(/^0x/, '')
     if (!/^[a-f0-9]{64}$/.test(cleanTxid)) {
       toast.error("Invalid transaction ID format", {
@@ -222,20 +340,18 @@ export function ClaimForm() {
       const currentHeight = await getCurrentBlockHeight()
       const confirmations = currentHeight - tx.status.block_height + 1
       
-      // Parse user-provided broadcast height if available
+      const selectedPurchase = userPurchases.find(p => p.purchaseId === selectedPurchaseId)
       const userBroadcastHeight = broadcastHeight ? parseInt(broadcastHeight) : undefined
       
-      // Analyze delay for insurance eligibility
-      const delayAnalysis = analyzeDelay(tx, currentHeight, userBroadcastHeight)
+      const delayAnalysis = analyzeDelay(tx, currentHeight, userBroadcastHeight, selectedPurchase?.delayThreshold)
       
-      // Determine eligibility
       let isEligible = false
       let rejectionReason: string | undefined
       
       if (confirmations < INSURANCE_CONFIG.MIN_CONFIRMATIONS) {
         rejectionReason = `Insufficient confirmations (${confirmations}/${INSURANCE_CONFIG.MIN_CONFIRMATIONS} required)`
       } else if (!delayAnalysis.isDelayed) {
-        rejectionReason = `Transaction was not delayed. Delay: ${delayAnalysis.delayBlocks} blocks (minimum ${INSURANCE_CONFIG.DELAY_THRESHOLD_BLOCKS} required)`
+        rejectionReason = `Transaction was not delayed enough. Delay: ${delayAnalysis.delayBlocks} blocks (minimum ${selectedPurchase?.delayThreshold || INSURANCE_CONFIG.DELAY_THRESHOLD_BLOCKS} required)`
       } else {
         isEligible = true
       }
@@ -250,6 +366,7 @@ export function ClaimForm() {
         fee: tx.fee,
         txSize: tx.size,
         rejectionReason,
+        requiredDelayThreshold: selectedPurchase?.delayThreshold,
       })
       
       if (isEligible) {
@@ -277,24 +394,8 @@ export function ClaimForm() {
       return
     }
 
-    if (!policyId) {
-      toast.error("Please enter your Policy ID")
-      return
-    }
-
-    const cleanPolicyId = policyId.replace(/^0x/i, '').trim()
-    if (cleanPolicyId.length > 10 || /[a-fA-F]/.test(cleanPolicyId)) {
-      toast.error("Invalid Policy ID", {
-        description: "Policy ID should be a simple number (1, 2, 3...), not a transaction hash."
-      })
-      return
-    }
-
-    const policyIdNum = parseInt(cleanPolicyId, 10)
-    if (isNaN(policyIdNum) || policyIdNum <= 0 || policyIdNum > 1000000) {
-      toast.error("Invalid Policy ID", {
-        description: "Policy ID must be a positive number between 1 and 1,000,000"
-      })
+    if (!selectedPurchaseId) {
+      toast.error("Please select a policy purchase")
       return
     }
 
@@ -313,14 +414,15 @@ export function ClaimForm() {
     setSubmitting(true)
 
     try {
-      const claimProcessorContract = CONTRACT_ADDRESSES.CLAIM_PROCESSOR
-      if (!claimProcessorContract) {
-        toast.error("Claim Processor contract not configured")
+      const contractAddress = CONTRACT_ADDRESSES.HYPERINSURE_CORE_V2
+      if (!contractAddress) {
+        toast.error("Contract not configured")
         setSubmitting(false)
         return
       }
 
-      const { address, name } = parseContractId(claimProcessorContract)
+      const { address, name } = parseContractId(contractAddress)
+      const claimId = generateClaimId()
       
       const hexToUint8Array = (hex: string): Uint8Array => {
         const cleanHex = hex.startsWith('0x') ? hex.slice(2) : hex
@@ -331,6 +433,12 @@ export function ClaimForm() {
         return bytes
       }
 
+      // For now, we'll use placeholder values for tx, header, and proof
+      // In production, these should be fetched from Bitcoin APIs
+      const txHashBytes = hexToUint8Array(claimResult.transactionHash)
+      const txPlaceholder = new Uint8Array(256) // Placeholder - should be actual transaction bytes
+      const headerPlaceholder = new Uint8Array(80) // Placeholder - should be actual block header
+      
       const proof = tupleCV({
         'tx-index': uintCV(0),
         'hashes': listCV([]),
@@ -340,28 +448,92 @@ export function ClaimForm() {
       openContractCall({
         contractAddress: address,
         contractName: name,
-        functionName: 'submit-claim',
+        functionName: 'submit-claim-with-proof',
         functionArgs: [
-          uintCV(policyIdNum),
-          bufferCV(hexToUint8Array(txid)),
-          bufferCV(hexToUint8Array(txData.status.block_hash)),
+          stringAsciiCV(claimId),
+          stringAsciiCV(selectedPurchaseId),
+          bufferCV(txHashBytes),
+          uintCV(claimResult.delayAnalysis.estimatedBroadcastHeight),
+          uintCV(claimResult.blockHeight),
+          bufferCV(txPlaceholder),
+          bufferCV(headerPlaceholder),
           proof,
         ],
         network: {
-          url: 'https://api.testnet.hiro.so',
-          chainId: 0x80000000,
+          url: APP_CONFIG.STACKS_API_URL,
+          chainId: APP_CONFIG.NETWORK === 'mainnet' ? 0x00000001 : 0x80000000,
         } as any,
         anchorMode: AnchorMode.Any,
         postConditionMode: PostConditionMode.Allow,
         onFinish: (data) => {
-          toast.success("Claim submitted successfully!", {
-            description: `Transaction ID: ${data.txId}`,
-            action: {
-              label: "View",
-              onClick: () => window.open(`https://explorer.hiro.so/txid/${data.txId}?chain=${APP_CONFIG.NETWORK}`, '_blank')
+          const explorerUrl = `${APP_CONFIG.EXPLORER_URL}/txid/${data.txId}?chain=${APP_CONFIG.NETWORK}`
+          const copyTxId = () => {
+            navigator.clipboard.writeText(data.txId)
+            toast.success("Copied to clipboard!", { duration: 2000 })
+          }
+          
+          toast.custom(
+            (t) => (
+              <div className={`glass rounded-2xl p-6 border border-white/10 shadow-2xl min-w-[420px] max-w-[500px] transition-all duration-300 ${t.visible ? 'animate-in slide-in-from-top-5' : 'animate-out slide-out-to-top-5'}`}>
+                <div className="flex flex-col gap-5">
+                  {/* Header */}
+                  <div className="flex items-start gap-4">
+                    <div className="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-secondary/20 via-secondary/20 to-secondary/20 border border-secondary/40 flex items-center justify-center shadow-lg shadow-secondary/20">
+                      <Shield className="w-6 h-6 text-secondary" />
+                    </div>
+                    <div className="flex-1 min-w-0 pt-0.5">
+                      <div className="text-lg font-bold text-foreground mb-1.5">
+                        Claim Submitted Successfully!
+                      </div>
+                      <div className="text-sm text-muted-foreground leading-relaxed">
+                        Your insurance claim has been submitted and is being processed
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Transaction ID Section */}
+                  <div className="glass rounded-xl p-4 border border-white/10 bg-gradient-to-br from-secondary/5 via-secondary/3 to-transparent">
+                    <div className="flex items-center justify-between gap-3 mb-3">
+                      <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                        Transaction ID
+                      </div>
+                      <button
+                        onClick={copyTxId}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 hover:border-secondary/40 transition-all text-xs font-medium text-foreground hover:text-secondary active:scale-95"
+                      >
+                        <Copy className="w-3.5 h-3.5" />
+                        Copy
+                      </button>
+                    </div>
+                    <div className="flex items-center gap-2 p-3 rounded-lg bg-background/60 border border-white/5 backdrop-blur-sm">
+                      <code className="text-xs font-mono text-foreground/90 break-all flex-1 leading-relaxed">
+                        {data.txId}
+                      </code>
+                    </div>
+                  </div>
+                  
+                  {/* Action Button */}
+                  <button
+                    onClick={() => {
+                      window.open(explorerUrl, '_blank')
+                      toast.dismiss(t.id)
+                    }}
+                    className="w-full flex items-center justify-center gap-2.5 px-5 py-3.5 rounded-xl bg-gradient-to-r from-secondary/20 via-secondary/15 to-secondary/10 hover:from-secondary/30 hover:via-secondary/20 hover:to-secondary/15 border border-secondary/40 hover:border-secondary/60 transition-all text-sm font-semibold text-secondary hover:text-secondary/90 group shadow-lg shadow-secondary/10 hover:shadow-secondary/20 active:scale-[0.98]"
+                  >
+                    <ExternalLink className="w-4 h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                    View on Explorer
+                  </button>
+                </div>
+              </div>
+            ),
+            {
+              duration: 12000,
             }
-          })
+          )
           setSubmitting(false)
+          setClaimResult(null)
+          setTxid("")
+          setBroadcastHeight("")
         },
         onCancel: () => {
           toast.info("Claim cancelled")
@@ -373,102 +545,126 @@ export function ClaimForm() {
       toast.error("Failed to submit claim", {
         description: error instanceof Error ? error.message : "Please try again.",
       })
-    } finally {
       setSubmitting(false)
     }
   }
 
+  const selectedPurchase = userPurchases.find(p => p.purchaseId === selectedPurchaseId)
+
   return (
-    <div className="w-full">
-      <Card className="overflow-hidden rounded-2xl border border-white/20">
-        <div
-          className="absolute inset-0 rounded-2xl"
-          style={{
-            background: "rgba(231, 236, 235, 0.08)",
-            backdropFilter: "blur(4px)",
-            WebkitBackdropFilter: "blur(4px)",
-          }}
-        />
-        <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent rounded-2xl" />
-        
-        <CardHeader className="relative z-10">
-          <CardTitle className="text-2xl font-semibold text-foreground">Submit Insurance Claim</CardTitle>
-          <CardDescription className="text-muted-foreground">
-            Verify your delayed Bitcoin transaction and submit a claim
-          </CardDescription>
+    <div className="w-full space-y-6">
+      <Card className="glass border border-white/10 overflow-hidden relative">
+        <div className="absolute inset-0 bg-gradient-to-br from-secondary/5 via-transparent to-transparent opacity-50" />
+        <CardHeader className="relative z-10 pb-4">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="p-3 rounded-xl bg-gradient-to-br from-secondary/20 via-secondary/15 to-secondary/10 border border-secondary/20">
+              <Shield className="w-6 h-6 text-secondary" />
+            </div>
+            <div>
+              <CardTitle className="text-2xl font-bold text-foreground">Submit Insurance Claim</CardTitle>
+              <CardDescription className="text-muted-foreground mt-1">
+                Verify your delayed Bitcoin transaction and submit a claim
+              </CardDescription>
+            </div>
+          </div>
         </CardHeader>
         <form onSubmit={handleVerify}>
           <CardContent className="space-y-6 relative z-10">
-            {/* Insurance Requirements Info */}
-            <Alert className="border-blue-500/50 bg-blue-500/10">
-              <Clock className="h-4 w-4 text-blue-500" />
-              <AlertTitle className="text-foreground">Insurance Requirements</AlertTitle>
-              <AlertDescription className="text-muted-foreground text-sm">
-                <ul className="list-disc list-inside mt-2 space-y-1">
-                  <li>Transaction must be delayed by at least <strong>{INSURANCE_CONFIG.DELAY_THRESHOLD_BLOCKS} blocks</strong> (~{INSURANCE_CONFIG.DELAY_THRESHOLD_BLOCKS * 10} minutes)</li>
-                  <li>Minimum <strong>{INSURANCE_CONFIG.MIN_CONFIRMATIONS} confirmations</strong> required</li>
-                  <li>You must have an active insurance policy</li>
-                </ul>
-              </AlertDescription>
-            </Alert>
-
-            <div className="space-y-2">
-              <Label htmlFor="txid" className="text-foreground">Bitcoin Transaction ID</Label>
-              <Input
-                id="txid"
-                placeholder="e.g., 819571907118de9fa875ea126c7b128fc1bc998d89aa4196d6ade11d1fc21461"
-                value={txid}
-                onChange={(e) => {
-                  setTxid(e.target.value)
-                  setClaimResult(null)
-                }}
-                disabled={loading}
-                className="border-white/10 bg-white/5 focus-visible:ring-primary focus-visible:border-primary font-mono text-sm"
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="broadcastHeight" className="text-foreground">
-                Broadcast Block Height <span className="text-muted-foreground">(optional)</span>
-              </Label>
-              <Input
-                id="broadcastHeight"
-                type="number"
-                placeholder="e.g., 924233"
-                value={broadcastHeight}
-                onChange={(e) => setBroadcastHeight(e.target.value)}
-                disabled={loading}
-                className="border-white/10 bg-white/5 focus-visible:ring-primary focus-visible:border-primary"
-              />
-              <p className="text-xs text-muted-foreground">
-                The block height when you broadcast the transaction. If not provided, delay will be estimated from fee rate.
-              </p>
-            </div>
-
-            {claimResult && (
-              <div className="space-y-2">
-                <Label htmlFor="policyId" className="text-foreground">Policy ID</Label>
-                <Input
-                  id="policyId"
-                  type="text"
-                  placeholder="Enter your policy ID (e.g., 1, 2, 3...)"
-                  value={policyId}
-                  onChange={(e) => setPolicyId(e.target.value.trim())}
-                  disabled={submitting}
-                  className="border-white/10 bg-white/5 focus-visible:ring-primary focus-visible:border-primary"
-                />
-                <p className="text-xs text-yellow-500">
-                  ⚠️ Don't have a policy? First purchase insurance from the Purchase page.
-                </p>
+            {!isConnected ? (
+              <Alert className="border-yellow-500/50 bg-yellow-500/10">
+                <AlertCircle className="h-4 w-4 text-yellow-500" />
+                <AlertTitle className="text-foreground">Wallet Not Connected</AlertTitle>
+                <AlertDescription className="text-muted-foreground">
+                  Please connect your wallet to submit a claim
+                </AlertDescription>
+              </Alert>
+            ) : loadingPurchases ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="w-6 h-6 text-primary animate-spin" />
+                <span className="ml-2 text-muted-foreground">Loading your purchases...</span>
               </div>
+            ) : userPurchases.length === 0 ? (
+              <Alert className="border-blue-500/50 bg-blue-500/10">
+                <Shield className="h-4 w-4 text-blue-500" />
+                <AlertTitle className="text-foreground">No Active Purchases</AlertTitle>
+                <AlertDescription className="text-muted-foreground">
+                  You don't have any active policy purchases. <Link href="/purchase" className="text-primary hover:underline">Purchase a policy</Link> first to submit claims.
+                </AlertDescription>
+              </Alert>
+            ) : (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="purchaseId" className="text-foreground">Select Policy Purchase</Label>
+                  <select
+                    id="purchaseId"
+                    value={selectedPurchaseId}
+                    onChange={(e) => {
+                      setSelectedPurchaseId(e.target.value)
+                      setClaimResult(null)
+                    }}
+                    disabled={loading}
+                    className="w-full px-3 py-2 rounded-lg border border-white/10 bg-white/5 text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+                  >
+                    <option value="">-- Select a purchase --</option>
+                    {userPurchases.map((purchase) => (
+                      <option key={purchase.purchaseId} value={purchase.purchaseId}>
+                        {purchase.policyName} - {purchase.purchaseId} (Threshold: {purchase.delayThreshold} blocks)
+                      </option>
+                    ))}
+                  </select>
+                  {selectedPurchase && (
+                    <div className="mt-2 p-3 rounded-lg bg-primary/10 border border-primary/20">
+                      <p className="text-sm text-foreground">
+                        <span className="font-medium">Delay Threshold:</span> {selectedPurchase.delayThreshold} blocks
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Your transaction must be delayed by at least {selectedPurchase.delayThreshold} blocks to be eligible
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="txid" className="text-foreground">Bitcoin Transaction ID</Label>
+                  <Input
+                    id="txid"
+                    placeholder="e.g., 819571907118de9fa875ea126c7b128fc1bc998d89aa4196d6ade11d1fc21461"
+                    value={txid}
+                    onChange={(e) => {
+                      setTxid(e.target.value)
+                      setClaimResult(null)
+                    }}
+                    disabled={loading}
+                    className="border-white/10 bg-white/5 focus-visible:ring-primary focus-visible:border-primary font-mono text-sm"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="broadcastHeight" className="text-foreground">
+                    Broadcast Block Height <span className="text-muted-foreground">(optional)</span>
+                  </Label>
+                  <Input
+                    id="broadcastHeight"
+                    type="number"
+                    placeholder="e.g., 924233"
+                    value={broadcastHeight}
+                    onChange={(e) => setBroadcastHeight(e.target.value)}
+                    disabled={loading}
+                    className="border-white/10 bg-white/5 focus-visible:ring-primary focus-visible:border-primary"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    The block height when you broadcast the transaction. If not provided, delay will be estimated from fee rate.
+                  </p>
+                </div>
+              </>
             )}
           </CardContent>
-          <CardFooter className="flex flex-col space-y-4 relative z-10">
+          <div className="px-6 pb-6 relative z-10">
             <Button 
               type="submit" 
-              className="w-full bg-secondary text-secondary-foreground hover:bg-secondary/90 px-8 py-3 rounded-full font-medium text-base shadow-lg ring-1 ring-white/10" 
-              disabled={loading}
+              className="w-full bg-primary text-primary-foreground hover:bg-primary/90" 
+              disabled={loading || !isConnected || !selectedPurchaseId || userPurchases.length === 0}
             >
               {loading ? (
                 <>
@@ -479,27 +675,16 @@ export function ClaimForm() {
                 "Verify & Analyze Delay"
               )}
             </Button>
-          </CardFooter>
+          </div>
         </form>
       </Card>
 
       {claimResult && (
-        <Card className="mt-6 overflow-hidden rounded-2xl border border-white/20">
-          <div
-            className="absolute inset-0 rounded-2xl"
-            style={{
-              background: "rgba(231, 236, 235, 0.08)",
-              backdropFilter: "blur(4px)",
-              WebkitBackdropFilter: "blur(4px)",
-            }}
-          />
-          <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent rounded-2xl" />
-          
+        <Card className="glass border border-white/10 overflow-hidden">
           <CardHeader className="relative z-10">
             <CardTitle className="text-xl font-semibold text-foreground">Delay Analysis Result</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6 relative z-10">
-            {/* Eligibility Status */}
             <Alert className={
               claimResult.isEligible 
                 ? "border-green-500/50 bg-green-500/10" 
@@ -521,88 +706,97 @@ export function ClaimForm() {
               </AlertDescription>
             </Alert>
 
-            {/* Delay Analysis Details */}
-            <div className="space-y-3 rounded-xl border border-white/10 p-4 bg-white/5">
-              <h4 className="font-medium text-foreground mb-3">Delay Analysis</h4>
+            <div className="space-y-3 rounded-xl border border-white/10 p-5 bg-gradient-to-br from-primary/5 via-primary/3 to-transparent">
+              <div className="flex items-center gap-2 mb-4">
+                <Clock className="w-5 h-5 text-primary" />
+                <h4 className="font-bold text-lg text-foreground">Delay Analysis</h4>
+              </div>
               
-              <div className="grid grid-cols-2 gap-1">
-                <div className="text-sm text-muted-foreground">Estimated Broadcast Height:</div>
-                <div className="text-foreground font-mono">{claimResult.delayAnalysis.estimatedBroadcastHeight.toLocaleString()}</div>
-              </div>
-              <div className="grid grid-cols-2 gap-1">
-                <div className="text-sm text-muted-foreground">Confirmation Height:</div>
-                <div className="text-foreground font-mono">{claimResult.delayAnalysis.confirmationHeight.toLocaleString()}</div>
-              </div>
-              <div className="grid grid-cols-2 gap-1">
-                <div className="text-sm text-muted-foreground">Delay:</div>
-                <div className={`font-medium ${claimResult.delayAnalysis.isDelayed ? 'text-green-500' : 'text-red-500'}`}>
-                  {claimResult.delayAnalysis.delayBlocks} blocks (~{claimResult.delayAnalysis.delayMinutes} min)
-                  {claimResult.delayAnalysis.isDelayed ? ' ✓' : ` (need ${INSURANCE_CONFIG.DELAY_THRESHOLD_BLOCKS}+)`}
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div className="p-3 rounded-lg bg-white/5 border border-white/5">
+                  <div className="text-xs text-muted-foreground mb-1">Estimated Broadcast Height</div>
+                  <div className="text-foreground font-mono font-semibold">{claimResult.delayAnalysis.estimatedBroadcastHeight.toLocaleString()}</div>
                 </div>
-              </div>
-              <div className="grid grid-cols-2 gap-1">
-                <div className="text-sm text-muted-foreground">Fee Rate:</div>
-                <div className={`text-foreground ${claimResult.delayAnalysis.isLowFee ? 'text-yellow-500' : ''}`}>
-                  {claimResult.delayAnalysis.feeRate.toFixed(2)} sat/vB
-                  {claimResult.delayAnalysis.isLowFee && ' (low fee)'}
+                
+                <div className="p-3 rounded-lg bg-white/5 border border-white/5">
+                  <div className="text-xs text-muted-foreground mb-1">Confirmation Height</div>
+                  <div className="text-foreground font-mono font-semibold">{claimResult.delayAnalysis.confirmationHeight.toLocaleString()}</div>
                 </div>
-              </div>
-              <div className="grid grid-cols-2 gap-1">
-                <div className="text-sm text-muted-foreground">Analysis Method:</div>
-                <div className="text-xs text-muted-foreground">{claimResult.delayAnalysis.reason}</div>
+                
+                <div className="p-3 rounded-lg bg-white/5 border border-white/5 col-span-2">
+                  <div className="text-xs text-muted-foreground mb-1">Delay</div>
+                  <div className={`font-bold text-lg ${claimResult.delayAnalysis.isDelayed ? 'text-green-400' : 'text-red-400'}`}>
+                    {claimResult.delayAnalysis.delayBlocks} blocks (~{claimResult.delayAnalysis.delayMinutes} min)
+                    {claimResult.delayAnalysis.isDelayed ? ' ✓' : ` (need ${claimResult.requiredDelayThreshold || INSURANCE_CONFIG.DELAY_THRESHOLD_BLOCKS}+)`}
+                  </div>
+                </div>
+                
+                <div className="p-3 rounded-lg bg-white/5 border border-white/5 col-span-2">
+                  <div className="text-xs text-muted-foreground mb-1">Fee Rate</div>
+                  <div className={`text-foreground font-semibold ${claimResult.delayAnalysis.isLowFee ? 'text-yellow-400' : ''}`}>
+                    {claimResult.delayAnalysis.feeRate.toFixed(2)} sat/vB
+                    {claimResult.delayAnalysis.isLowFee && (
+                      <span className="ml-2 text-yellow-400 text-xs">(low fee)</span>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
 
-            {/* Transaction Details */}
-            <div className="space-y-3 rounded-xl border border-white/10 p-4 bg-white/5">
-              <h4 className="font-medium text-foreground mb-3">Transaction Details</h4>
+            <div className="space-y-3 rounded-xl border border-white/10 p-5 bg-gradient-to-br from-accent/5 via-accent/3 to-transparent">
+              <div className="flex items-center gap-2 mb-4">
+                <FileText className="w-5 h-5 text-accent" />
+                <h4 className="font-bold text-lg text-foreground">Transaction Details</h4>
+              </div>
               
-              <div className="grid grid-cols-2 gap-1">
-                <div className="text-sm text-muted-foreground">TX ID:</div>
-                <div className="truncate font-mono text-xs text-foreground flex items-center gap-2">
-                  {claimResult.transactionHash.slice(0, 16)}...
-                  <a 
-                    href={`https://www.blockchain.com/explorer/transactions/btc/${claimResult.transactionHash}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-primary hover:underline"
-                  >
-                    <ExternalLink className="h-3 w-3" />
-                  </a>
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div className="p-3 rounded-lg bg-white/5 border border-white/5 col-span-2">
+                  <div className="text-xs text-muted-foreground mb-1">Transaction ID</div>
+                  <div className="truncate font-mono text-xs text-foreground flex items-center gap-2">
+                    {claimResult.transactionHash.slice(0, 20)}...
+                    <a 
+                      href={`https://www.blockchain.com/explorer/transactions/btc/${claimResult.transactionHash}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary hover:underline flex items-center gap-1"
+                    >
+                      <ExternalLink className="h-3.5 w-3.5" />
+                      View
+                    </a>
+                  </div>
                 </div>
-              </div>
-              <div className="grid grid-cols-2 gap-1">
-                <div className="text-sm text-muted-foreground">Confirmations:</div>
-                <div className={`text-foreground ${claimResult.confirmations >= INSURANCE_CONFIG.MIN_CONFIRMATIONS ? 'text-green-500' : 'text-red-500'}`}>
-                  {claimResult.confirmations.toLocaleString()}
-                  {claimResult.confirmations >= INSURANCE_CONFIG.MIN_CONFIRMATIONS ? ' ✓' : ` (need ${INSURANCE_CONFIG.MIN_CONFIRMATIONS}+)`}
+                
+                <div className="p-3 rounded-lg bg-white/5 border border-white/5">
+                  <div className="text-xs text-muted-foreground mb-1">Confirmations</div>
+                  <div className={`text-foreground font-semibold ${claimResult.confirmations >= INSURANCE_CONFIG.MIN_CONFIRMATIONS ? 'text-green-400' : 'text-red-400'}`}>
+                    {claimResult.confirmations.toLocaleString()}
+                    {claimResult.confirmations >= INSURANCE_CONFIG.MIN_CONFIRMATIONS ? ' ✓' : ` (need ${INSURANCE_CONFIG.MIN_CONFIRMATIONS}+)`}
+                  </div>
                 </div>
-              </div>
-              <div className="grid grid-cols-2 gap-1">
-                <div className="text-sm text-muted-foreground">Fee:</div>
-                <div className="text-foreground">{claimResult.fee.toLocaleString()} sats</div>
-              </div>
-              <div className="grid grid-cols-2 gap-1">
-                <div className="text-sm text-muted-foreground">Size:</div>
-                <div className="text-foreground">{claimResult.txSize} vB</div>
+                
+                <div className="p-3 rounded-lg bg-white/5 border border-white/5">
+                  <div className="text-xs text-muted-foreground mb-1">Fee</div>
+                  <div className="text-foreground font-semibold">{claimResult.fee.toLocaleString()} sats</div>
+                </div>
+                
+                <div className="p-3 rounded-lg bg-white/5 border border-white/5">
+                  <div className="text-xs text-muted-foreground mb-1">Size</div>
+                  <div className="text-foreground font-semibold">{claimResult.txSize} vB</div>
+                </div>
               </div>
             </div>
 
             {claimResult.isEligible && (
               <Button 
                 onClick={handleSubmitClaim}
-                disabled={submitting || !isConnected || !policyId}
-                className="w-full bg-green-600 text-white hover:bg-green-700 px-8 py-3 rounded-full font-medium text-base shadow-lg"
+                disabled={submitting || !isConnected || !selectedPurchaseId}
+                className="w-full bg-green-600 text-white hover:bg-green-700"
               >
                 {submitting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Submitting Claim...
                   </>
-                ) : !isConnected ? (
-                  "Connect Wallet to Submit"
-                ) : !policyId ? (
-                  "Enter Policy ID to Submit"
                 ) : (
                   "Submit Insurance Claim"
                 )}
@@ -612,7 +806,7 @@ export function ClaimForm() {
             {!claimResult.isEligible && (
               <div className="text-center text-sm text-muted-foreground">
                 <p>This transaction does not qualify for an insurance claim.</p>
-                <p className="mt-1">Insurance covers transactions delayed by {INSURANCE_CONFIG.DELAY_THRESHOLD_BLOCKS}+ blocks due to network congestion.</p>
+                <p className="mt-1">Insurance covers transactions delayed by {claimResult.requiredDelayThreshold || INSURANCE_CONFIG.DELAY_THRESHOLD_BLOCKS}+ blocks due to network congestion.</p>
               </div>
             )}
           </CardContent>
