@@ -2,38 +2,38 @@
 
 import type React from "react"
 import { useState } from "react"
-import { ChevronDown } from "lucide-react"
+import { ChevronDown, HelpCircle, Mail } from "lucide-react"
 
 const faqData = [
   {
     question: "What is HyperInsure and who is it for?",
     answer:
-      "⚡HyperInsure is the first on-chain insurance protocol protecting blockchain users from transaction latency, mempool congestion and finality delays. It's for anyone using blockchain transactions who wants protection against delays that can cause inconvenience and financial loss.",
+      "HyperInsure is the first on-chain insurance protocol protecting Bitcoin users from transaction delays, mempool congestion, and finality issues. It's for anyone sending Bitcoin transactions who wants protection against delays that can cause inconvenience and financial loss.",
   },
   {
     question: "What problems does HyperInsure solve?",
     answer:
-      "HyperInsure addresses several critical issues: pending transactions stuck in mempools, volatile fee markets, uncertainty in block inclusion, finality risks across congested networks, and transactions that may be 'quarantined' by chains like Zircuit.",
+      "HyperInsure addresses critical Bitcoin transaction issues: transactions stuck in mempools during high congestion, uncertainty in block inclusion timing, delays measured in Bitcoin blocks, and financial losses from delayed transaction finality. Our block-based delay protection ensures users are compensated when delays exceed policy thresholds.",
   },
   {
     question: "How does HyperInsure work?",
     answer:
-      "Users purchase coverage using STX tokens. Our RPC proxy API records broadcast height at submission. Once a transaction is included, an oracle signs an attestation of the broadcast → inclusion delay. Smart contracts written in Clarity verify these proofs and release payouts if the delay exceeds the threshold.",
+      "Users purchase insurance coverage using STX tokens by selecting a policy (Starter, Professional, or Enterprise) and paying a premium. When a Bitcoin transaction experiences delays, users submit claim details including transaction ID, merkle proofs, and block headers. Clarity smart contracts verify the Bitcoin transaction using cryptographic proofs and calculate delay using Bitcoin burn block heights. If the delay exceeds the policy threshold, automated payouts are released from the STX treasury.",
   },
   {
-    question: "What makes HyperInsure non-intrusive?",
+    question: "What makes HyperInsure trustless?",
     answer:
-      "HyperInsure requires no additional parameters, code modifications, or complex application processes. It works alongside existing transactions without changing how they function, making it simple to integrate into any blockchain workflow.",
+      "HyperInsure requires no trust in centralized parties. All insurance logic is executed on-chain using Clarity smart contracts, with cryptographic proofs verified automatically. Payouts are instant and non-custodial.",
   },
   {
     question: "What technology powers HyperInsure?",
     answer:
-      "HyperInsure is built on key technical primitives: Clarity smart contracts for deterministic, auditable insurance logic; burn block heights for objective time measurement via Bitcoin anchoring; secp256k1-signed oracle attestations validated on-chain; and STX reserves for instant payouts.",
+      "HyperInsure is built on Stacks blockchain with Clarity smart contracts for deterministic, auditable insurance logic; Bitcoin burn block heights for objective time measurement; Bitcoin transaction verification using merkle proofs and block headers; and STX reserves in a decentralized treasury for instant payouts. All verification happens on-chain without requiring trust in centralized parties.",
   },
   {
-    question: "What future insurance products will HyperInsure offer?",
+    question: "What future products will HyperInsure offer?",
     answer:
-      "We plan to extend to many types of blockchain insurance, including wallet theft protection via Arkham, transaction failure coverage, gas-spike hedging, validator risk coverage, and cross-chain finality protection.",
+      "We plan to extend to many types of blockchain insurance, including wallet theft protection, transaction failure coverage, gas-spike hedging, validator risk coverage, and cross-chain finality protection.",
   },
 ]
 
@@ -45,34 +45,47 @@ interface FAQItemProps {
 }
 
 const FAQItem = ({ question, answer, isOpen, onToggle }: FAQItemProps) => {
-  const handleClick = (e: React.MouseEvent) => {
-    e.preventDefault()
-    onToggle()
-  }
   return (
     <div
-      className={`w-full bg-[rgba(231,236,235,0.08)] shadow-[0px_2px_4px_rgba(0,0,0,0.16)] overflow-hidden rounded-[10px] outline outline-1 outline-border outline-offset-[-1px] transition-all duration-500 ease-out cursor-pointer`}
-      onClick={handleClick}
+      onClick={onToggle}
+      className={`group relative glass rounded-2xl border transition-all duration-300 cursor-pointer overflow-hidden ${
+        isOpen 
+          ? "border-primary/30 bg-white/5 shadow-lg shadow-primary/10" 
+          : "border-white/10 hover:border-white/20 hover:bg-white/5"
+      }`}
     >
-      <div className="w-full px-5 py-[18px] pr-4 flex justify-between items-center gap-5 text-left transition-all duration-300 ease-out">
-        <div className="flex-1 text-foreground text-base font-medium leading-6 break-words">{question}</div>
-        <div className="flex justify-center items-center">
-          <ChevronDown
-            className={`w-6 h-6 text-muted-foreground-dark transition-all duration-500 ease-out ${isOpen ? "rotate-180 scale-110" : "rotate-0 scale-100"}`}
-          />
+      {/* Gradient overlay when open */}
+      {isOpen && (
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none" />
+      )}
+      
+      <div className="relative p-6 flex justify-between items-start gap-4">
+        <div className="flex-1">
+          <h3 className={`text-lg font-semibold leading-snug transition-colors ${
+            isOpen 
+              ? "text-gradient" 
+              : "text-foreground group-hover:text-gradient"
+          }`}>
+            {question}
+          </h3>
+        </div>
+        <div className={`flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
+          isOpen 
+            ? "bg-primary/20 text-primary rotate-180" 
+            : "bg-white/5 text-muted-foreground group-hover:bg-white/10 group-hover:text-foreground"
+        }`}>
+          <ChevronDown className="w-5 h-5 transition-transform duration-300" />
         </div>
       </div>
+      
       <div
-        className={`overflow-hidden transition-all duration-500 ease-out ${isOpen ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"}`}
-        style={{
-          transitionProperty: "max-height, opacity, padding",
-          transitionTimingFunction: "cubic-bezier(0.4, 0, 0.2, 1)",
-        }}
+        className={`overflow-hidden transition-all duration-500 ease-in-out ${
+          isOpen ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"
+        }`}
       >
-        <div
-          className={`px-5 transition-all duration-500 ease-out ${isOpen ? "pb-[18px] pt-2 translate-y-0" : "pb-0 pt-0 -translate-y-2"}`}
-        >
-          <div className="text-foreground/80 text-sm font-normal leading-6 break-words">{answer}</div>
+        <div className="px-6 pb-6 pt-0">
+          <div className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent mb-4" />
+          <p className="text-muted-foreground leading-relaxed text-base">{answer}</p>
         </div>
       </div>
     </div>
@@ -80,7 +93,8 @@ const FAQItem = ({ question, answer, isOpen, onToggle }: FAQItemProps) => {
 }
 
 export function FAQSection() {
-  const [openItems, setOpenItems] = useState<Set<number>>(new Set())
+  const [openItems, setOpenItems] = useState<Set<number>>(new Set([0]))
+  
   const toggleItem = (index: number) => {
     const newOpenItems = new Set(openItems)
     if (newOpenItems.has(index)) {
@@ -90,23 +104,77 @@ export function FAQSection() {
     }
     setOpenItems(newOpenItems)
   }
+
   return (
-    <section className="w-full pt-[66px] pb-20 md:pb-40 px-5 relative flex flex-col justify-center items-center">
-      <div className="w-[300px] h-[500px] absolute top-[150px] left-1/2 -translate-x-1/2 origin-top-left rotate-[-33.39deg] bg-primary/10 blur-[100px] z-0" />
-      <div className="self-stretch pt-8 pb-8 md:pt-14 md:pb-14 flex flex-col justify-center items-center gap-2 relative z-10">
-        <div className="flex flex-col justify-start items-center gap-4">
-          <h2 className="w-full max-w-[435px] text-center text-foreground text-4xl font-semibold leading-10 break-words">
-            Frequently Asked Questions
+    <section className="w-full py-24 px-6 relative overflow-hidden">
+      {/* Enhanced Background */}
+      <div className="absolute inset-0 -z-10">
+        <div className="absolute top-1/4 left-1/4 w-[600px] h-[600px] bg-primary/10 rounded-full blur-[120px] opacity-60" />
+        <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-accent/10 rounded-full blur-[100px] opacity-40" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff03_1px,transparent_1px),linear-gradient(to_bottom,#ffffff03_1px,transparent_1px)] bg-[size:60px_60px]" />
+      </div>
+
+      <div className="max-w-4xl mx-auto relative z-10">
+        {/* Header */}
+        <div className="text-center mb-16 space-y-6">
+          <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full glass border border-primary/20 mb-2">
+            <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
+            <HelpCircle className="w-4 h-4 text-primary" />
+            <span className="text-sm font-semibold text-foreground">FAQ</span>
+          </div>
+
+          <h2 className="text-4xl md:text-6xl lg:text-7xl font-bold leading-tight">
+            <span className="text-foreground">Frequently Asked </span>
+            <span className="text-gradient">Questions</span>
           </h2>
-          <p className="self-stretch text-center text-muted-foreground text-sm font-medium leading-[18.20px] break-words">
-            Everything you need to know about HyperInsure and how it protects your blockchain transactions
+          
+          <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+            Everything you need to know about HyperInsure
           </p>
         </div>
-      </div>
-      <div className="w-full max-w-[600px] pt-0.5 pb-10 flex flex-col justify-start items-start gap-4 relative z-10">
-        {faqData.map((faq, index) => (
-          <FAQItem key={index} {...faq} isOpen={openItems.has(index)} onToggle={() => toggleItem(index)} />
-        ))}
+
+        {/* FAQ Items */}
+        <div className="space-y-3">
+          {faqData.map((item, index) => (
+            <FAQItem
+              key={index}
+              question={item.question}
+              answer={item.answer}
+              isOpen={openItems.has(index)}
+              onToggle={() => toggleItem(index)}
+            />
+          ))}
+        </div>
+
+        {/* Enhanced CTA Section */}
+        <div className="mt-20 relative">
+          <div className="glass rounded-3xl p-8 md:p-12 border border-white/10 relative overflow-hidden">
+            {/* Background gradient */}
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-accent/10 pointer-events-none" />
+            
+            <div className="relative z-10 text-center space-y-6">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/20 mb-4">
+                <Mail className="w-8 h-8 text-primary" />
+              </div>
+              
+              <h3 className="text-2xl md:text-3xl font-bold text-foreground">
+                Still have questions?
+              </h3>
+              
+              <p className="text-muted-foreground text-lg max-w-xl mx-auto">
+                Can't find the answer you're looking for? Our support team is here to help.
+              </p>
+              
+              <a
+                href="mailto:support@hyperinsure.io"
+                className="inline-flex items-center gap-2 px-8 py-4 bg-primary hover:bg-primary/90 text-primary-foreground rounded-2xl font-semibold text-base transition-all hover:scale-105 shadow-lg shadow-primary/30"
+              >
+                <Mail className="w-5 h-5" />
+                Contact Support
+              </a>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
   )
