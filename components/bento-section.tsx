@@ -37,32 +37,32 @@ export function BentoSection() {
   const cards = [
     {
       title: "Purchase Coverage with STX",
-      description: "Users purchase insurance coverage using Stacks (STX) tokens.",
+      description: "Users purchase insurance coverage using Stacks (STX) tokens for transaction delay protection.",
       Component: AiCodeReviews,
     },
     {
-      title: "RPC Proxy API",
-      description: "Our RPC proxy records broadcast height at transaction submission.",
+      title: "Submit Bitcoin Transaction",
+      description: "Users submit Bitcoin transaction details (txid, merkle proofs) when experiencing delays.",
       Component: RealtimeCodingPreviews,
     },
     {
-      title: "Oracle Attestation",
-      description: "Once included, an oracle signs an attestation of broadcast → inclusion delay.",
+      title: "Bitcoin Verification",
+      description: "Clarity smart contracts verify Bitcoin transactions using merkle proofs and block headers.",
       Component: OneClickIntegrationsIllustration,
     },
     {
-      title: "Smart Contract Verification",
-      description: "Clarity smart contracts verify proofs and release payouts if delay ≥ threshold.",
+      title: "Delay Calculation",
+      description: "System calculates delay using Bitcoin burn block heights for objective time measurement.",
       Component: MCPConnectivityIllustration,
     },
     {
-      title: "Bitcoin Security",
-      description: "Burn block heights provide objective measurement of time via Bitcoin anchoring.",
+      title: "Automated Payouts",
+      description: "Smart contracts automatically release payouts when verified delay exceeds policy threshold.",
       Component: ParallelCodingAgents,
     },
     {
-      title: "Instant Payouts",
-      description: "STX reserves provide capital pool for instant insurance payouts.",
+      title: "Treasury Management",
+      description: "Decentralized treasury pools premiums and maintains reserves for instant claim settlements.",
       Component: EasyDeployment,
     },
   ]
