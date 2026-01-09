@@ -6,17 +6,19 @@
  */
 
 import {
-  fetchCallReadOnlyFunction,
+  callReadOnlyFunction,
   makeContractCall,
   broadcastTransaction,
   AnchorMode,
   PostConditionMode,
   uintCV,
+  stringAsciiCV,
   bufferCV,
   tupleCV,
   listCV,
   ClarityValue,
   cvToString,
+  cvToJSON,
 } from '@stacks/transactions';
 import { StacksNetwork } from '@stacks/network';
 import { UserSession } from '@stacks/auth';
@@ -71,7 +73,11 @@ export class ContractInteractions {
     const { address, name } = parseContractId(contractAddress);
     
     try {
-      const result = await fetchCallReadOnlyFunction({
+      if (!this.network) {
+        throw new Error('Network not initialized');
+      }
+
+      const result = await callReadOnlyFunction({
         contractAddress: address,
         contractName: name,
         functionName,
@@ -85,7 +91,31 @@ export class ContractInteractions {
       }
 
       return result;
-    } catch (error) {
+    } catch (error: any) {
+      // Handle undefined function errors gracefully
+      const errorMessage = error?.message || error?.toString() || '';
+      const errorString = JSON.stringify(error) || '';
+      
+      if (
+        errorMessage.includes('UndefinedFunction') || 
+        errorMessage.includes('undefined function') ||
+        errorString.includes('UndefinedFunction') ||
+        errorMessage.includes('get-policy-count') || 
+        errorMessage.includes('get-purchase-count') || 
+        errorMessage.includes('get-total-deposits') || 
+        errorMessage.includes('get-total-payouts')
+      ) {
+        // Function doesn't exist in contract
+        if (APP_CONFIG.DEBUG_MODE) {
+          console.warn(`Function ${contractName}.${functionName} does not exist in contract`);
+        }
+        throw new Error('FUNCTION_NOT_FOUND');
+      }
+      // Handle network errors gracefully
+      if (error?.message?.includes('Failed to fetch') || error?.name === 'TypeError') {
+        console.error(`Network error calling ${contractName}.${functionName}:`, error);
+        throw new Error(`Network error: Unable to connect to Stacks API. Please check your connection.`);
+      }
       console.error(`Error calling ${contractName}.${functionName}:`, error);
       throw error;
     }
@@ -343,6 +373,188 @@ export class ContractInteractions {
     }
   }
 
+  // HyperInsure Core V2 Functions
+  async getPolicyV2(policyId: string): Promise<any | null> {
+    try {
+      if (!CONTRACT_ADDRESSES.HYPERINSURE_CORE_V2) {
+        console.warn('HYPERINSURE_CORE_V2 contract address not configured');
+        return null;
+      }
+      const result = await this.callReadOnly('HYPERINSURE_CORE_V2', 'get-policy', [
+        stringAsciiCV(policyId),
+      ]);
+
+      if (result.type === 'none' || result.type === 'optionalNone') {
+        return null;
+      }
+
+      // Parse tuple result
+      const json = cvToJSON(result);
+      if (json.type === 'tuple') {
+        return json.value;
+      }
+      return null;
+    } catch (error) {
+      console.error('Error getting policy V2:', error);
+      return null;
+    }
+  }
+
+  async getPurchaseV2(purchaseId: string): Promise<any | null> {
+    try {
+      if (!CONTRACT_ADDRESSES.HYPERINSURE_CORE_V2) {
+        console.warn('HYPERINSURE_CORE_V2 contract address not configured');
+        return null;
+      }
+      const result = await this.callReadOnly('HYPERINSURE_CORE_V2', 'get-purchase', [
+        stringAsciiCV(purchaseId),
+      ]);
+
+      if (result.type === 'none' || result.type === 'optionalNone') {
+        return null;
+      }
+
+      // Parse tuple result
+      const json = cvToJSON(result);
+      if (json.type === 'tuple') {
+        return json.value;
+      }
+      return null;
+    } catch (error) {
+      console.error('Error getting purchase V2:', error);
+      return null;
+    }
+  }
+
+  async getPolicyCountV2(): Promise<number> {
+    try {
+      if (!CONTRACT_ADDRESSES.HYPERINSURE_CORE_V2) {
+        return 0;
+      }
+      // Try to get policy-count variable (if there's a read-only function)
+      try {
+        const result = await this.callReadOnly('HYPERINSURE_CORE_V2', 'get-policy-count', []);
+        if (result.type === 'uint') {
+          return parseInt(result.value.toString());
+        }
+      } catch (e: any) {
+        // Function doesn't exist in contract - calculate from known policies
+        if (e?.message === 'FUNCTION_NOT_FOUND') {
+          // Try to count from known policy IDs
+          const knownIds = ['POL-001', 'POL-002', 'POL-003']
+          let count = 0
+          for (const id of knownIds) {
+            try {
+              const policy = await this.getPolicyV2(id)
+              if (policy) count++
+            } catch {
+              // Policy doesn't exist
+            }
+          }
+          // Also check localStorage for created policies
+          if (typeof window !== 'undefined') {
+            try {
+              const stored = localStorage.getItem('hyperinsure_created_policies')
+              const createdIds: string[] = stored ? JSON.parse(stored) : []
+              count = Math.max(count, createdIds.length)
+            } catch {
+              // Ignore localStorage errors
+            }
+          }
+          return count
+        }
+      }
+      return 0;
+    } catch (error) {
+      return 0;
+    }
+  }
+
+  async getPurchaseCountV2(): Promise<number> {
+    try {
+      if (!CONTRACT_ADDRESSES.HYPERINSURE_CORE_V2) {
+        return 0;
+      }
+      try {
+        const result = await this.callReadOnly('HYPERINSURE_CORE_V2', 'get-purchase-count', []);
+        if (result.type === 'uint') {
+          return parseInt(result.value.toString());
+        }
+      } catch (e: any) {
+        // Function doesn't exist - count from localStorage
+        if (e?.message === 'FUNCTION_NOT_FOUND') {
+          if (typeof window !== 'undefined') {
+            try {
+              // Count all purchases from all users in localStorage
+              let totalPurchases = 0
+              for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i)
+                if (key?.startsWith('hyperinsure_purchases_')) {
+                  try {
+                    const purchases = JSON.parse(localStorage.getItem(key) || '[]')
+                    totalPurchases += purchases.length
+                  } catch {
+                    // Ignore parse errors
+                  }
+                }
+              }
+              return totalPurchases
+            } catch {
+              return 0
+            }
+          }
+        }
+      }
+      return 0;
+    } catch (error) {
+      return 0;
+    }
+  }
+
+  async getTotalDepositsV2(): Promise<number> {
+    try {
+      if (!CONTRACT_ADDRESSES.HYPERINSURE_CORE_V2) {
+        return 0;
+      }
+      try {
+        const result = await this.callReadOnly('HYPERINSURE_CORE_V2', 'get-total-deposits', []);
+        if (result.type === 'uint') {
+          return parseInt(result.value.toString()) / 1000000; // Convert microSTX to STX
+        }
+      } catch (e: any) {
+        // Function doesn't exist - return 0 (can't calculate without contract function)
+        if (e?.message === 'FUNCTION_NOT_FOUND') {
+          return 0;
+        }
+      }
+      return 0;
+    } catch (error) {
+      return 0;
+    }
+  }
+
+  async getTotalPayoutsV2(): Promise<number> {
+    try {
+      if (!CONTRACT_ADDRESSES.HYPERINSURE_CORE_V2) {
+        return 0;
+      }
+      try {
+        const result = await this.callReadOnly('HYPERINSURE_CORE_V2', 'get-total-payouts', []);
+        if (result.type === 'uint') {
+          return parseInt(result.value.toString()) / 1000000; // Convert microSTX to STX
+        }
+      } catch (e: any) {
+        // Function doesn't exist - return 0 (can't calculate without contract function)
+        if (e?.message === 'FUNCTION_NOT_FOUND') {
+          return 0;
+        }
+      }
+      return 0;
+    } catch (error) {
+      return 0;
+    }
+  }
+
   // Utility Functions
   async getContractInfo(contractName: keyof typeof CONTRACT_ADDRESSES) {
     const contractAddress = CONTRACT_ADDRESSES[contractName];
@@ -361,6 +573,75 @@ export class ContractInteractions {
     } catch (error) {
       console.error(`Error getting contract info for ${contractName}:`, error);
       throw error;
+    }
+  }
+
+  async getAdminV2(): Promise<string | null> {
+    try {
+      if (!CONTRACT_ADDRESSES.HYPERINSURE_CORE_V2) {
+        console.warn('HYPERINSURE_CORE_V2 contract address not configured');
+        return null;
+      }
+      
+      try {
+        const result = await this.callReadOnly('HYPERINSURE_CORE_V2', 'get-admin', []);
+        
+        // Try to extract the principal address from the result
+        // The result might be wrapped or have different type codes
+        let adminAddress: string | null = null;
+        
+        // First, try cvToString which should work for principal types
+        const resultString = cvToString(result);
+        if (APP_CONFIG.DEBUG_MODE) {
+          console.log('get-admin result string:', resultString);
+          console.log('get-admin result type:', result.type);
+          console.log('get-admin result:', result);
+        }
+        
+        // Check if the string contains a Stacks address (ST or SP prefix)
+        if (resultString && (resultString.startsWith('ST') || resultString.startsWith('SP'))) {
+          adminAddress = resultString;
+        } else if (result.type === 'principal') {
+          // Direct principal type
+          adminAddress = cvToString(result);
+        } else if ((result as any).value) {
+          // Try to extract from value property
+          const value = (result as any).value;
+          if (typeof value === 'string' && (value.startsWith('ST') || value.startsWith('SP'))) {
+            adminAddress = value;
+          } else {
+            adminAddress = cvToString(value);
+          }
+        }
+        
+        if (adminAddress && (adminAddress.startsWith('ST') || adminAddress.startsWith('SP'))) {
+          if (APP_CONFIG.DEBUG_MODE) {
+            console.log('Admin address fetched successfully:', adminAddress);
+          }
+          return adminAddress;
+        }
+        
+        console.warn('get-admin returned unexpected format. Result:', resultString, 'Type:', result.type);
+        return null;
+      } catch (readError: any) {
+        // Check if it's a function not found error
+        if (readError?.message === 'FUNCTION_NOT_FOUND') {
+          console.warn('get-admin function not found in contract');
+          return null;
+        }
+        // Re-throw other errors
+        throw readError;
+      }
+    } catch (error: any) {
+      console.error('Error getting admin V2:', error);
+      // Log more details about the error
+      if (error?.message) {
+        console.error('Error message:', error.message);
+      }
+      if (error?.stack) {
+        console.error('Error stack:', error.stack);
+      }
+      return null;
     }
   }
 }
