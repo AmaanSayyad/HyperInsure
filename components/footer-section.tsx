@@ -1,82 +1,192 @@
 "use client"
 
-import { Twitter, Github, Linkedin } from "lucide-react"
+import { Twitter, Github, Linkedin, Mail } from "lucide-react"
+import Link from "next/link"
 
 export function FooterSection() {
   return (
-    <footer className="w-full max-w-[1320px] mx-auto px-5 flex flex-col md:flex-row justify-between items-start gap-8 md:gap-0 py-10 md:py-[70px]">
-      {/* Left Section: Logo, Description, Social Links */}
-      <div className="flex flex-col justify-start items-start gap-8 p-4 md:p-8">
-        <div className="flex gap-3 items-stretch justify-center">
-          <div className="text-center text-foreground text-xl font-semibold leading-4">⚡ HyperInsure</div>
-        </div>
-        <p className="text-foreground/90 text-sm font-medium leading-[18px] text-left">Decentralized insurance for blockchain transactions</p>
-        <div className="flex justify-start items-start gap-3">
-          <a href="#" aria-label="Twitter" className="w-4 h-4 flex items-center justify-center">
-            <Twitter className="w-full h-full text-muted-foreground" />
-          </a>
-          <a href="#" aria-label="GitHub" className="w-4 h-4 flex items-center justify-center">
-            <Github className="w-full h-full text-muted-foreground" />
-          </a>
-          <a href="#" aria-label="LinkedIn" className="w-4 h-4 flex items-center justify-center">
-            <Linkedin className="w-full h-full text-muted-foreground" />
-          </a>
-        </div>
+    <footer className="w-full border-t border-white/10 relative overflow-hidden">
+      {/* Enhanced Background */}
+      <div className="absolute inset-0 -z-10">
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-primary/5 to-background" />
+        <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
       </div>
-      {/* Right Section: Insurance, Company, Resources */}
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-8 md:gap-12 p-4 md:p-8 w-full md:w-auto">
-        <div className="flex flex-col justify-start items-start gap-3">
-          <h3 className="text-muted-foreground text-sm font-medium leading-5">Insurance</h3>
-          <div className="flex flex-col justify-center items-start gap-2">
-            <a href="/policies" className="text-foreground text-sm font-normal leading-5 hover:underline">
-              View Policies
-            </a>
-            <a href="/purchase" className="text-foreground text-sm font-normal leading-5 hover:underline">
-              Buy Insurance
-            </a>
-            <a href="/claim" className="text-foreground text-sm font-normal leading-5 hover:underline">
-              File Claim
-            </a>
-            <a href="#" className="text-foreground text-sm font-normal leading-5 hover:underline">
-              Coverage Types
-            </a>
+
+      <div className="max-w-7xl mx-auto px-6 py-20 md:py-28">
+        <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-12 lg:gap-16 mb-16">
+          {/* Brand Column */}
+          <div className="lg:col-span-2 space-y-6">
+            <Link href="/" className="flex items-center gap-3 group">
+              <span className="text-3xl group-hover:scale-110 transition-all duration-300">⚡</span>
+              <span className="text-xl font-bold text-foreground group-hover:text-gradient transition-colors">HyperInsure</span>
+            </Link>
+            
+            <p className="text-muted-foreground leading-relaxed max-w-sm text-base">
+              The first on-chain insurance protocol protecting Bitcoin transactions from delays, 
+              congestion, and finality issues.
+            </p>
+
+            {/* Enhanced Social Links */}
+            <div className="flex items-center gap-3 pt-2">
+              <a
+                href="https://twitter.com/hyperinsure"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-11 h-11 rounded-xl glass border border-white/10 hover:border-primary/30 hover:bg-primary/10 flex items-center justify-center transition-all hover:scale-110 group"
+                aria-label="Twitter"
+              >
+                <Twitter className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
+              </a>
+              <a
+                href="https://github.com/hyperinsure"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-11 h-11 rounded-xl glass border border-white/10 hover:border-primary/30 hover:bg-primary/10 flex items-center justify-center transition-all hover:scale-110 group"
+                aria-label="GitHub"
+              >
+                <Github className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
+              </a>
+              <a
+                href="https://linkedin.com/company/hyperinsure"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-11 h-11 rounded-xl glass border border-white/10 hover:border-primary/30 hover:bg-primary/10 flex items-center justify-center transition-all hover:scale-110 group"
+                aria-label="LinkedIn"
+              >
+                <Linkedin className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
+              </a>
+              <a
+                href="mailto:hello@hyperinsure.io"
+                className="w-11 h-11 rounded-xl glass border border-white/10 hover:border-primary/30 hover:bg-primary/10 flex items-center justify-center transition-all hover:scale-110 group"
+                aria-label="Email"
+              >
+                <Mail className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
+              </a>
+            </div>
+          </div>
+
+          {/* Product Links */}
+          <div className="space-y-5">
+            <h3 className="text-sm font-bold text-foreground uppercase tracking-wider mb-2">Product</h3>
+            <ul className="space-y-3.5">
+              <li>
+                <Link href="/purchase" className="text-muted-foreground hover:text-foreground hover:text-gradient transition-all text-sm font-medium inline-block group">
+                  Purchase Coverage
+                  <span className="inline-block ml-1 opacity-0 group-hover:opacity-100 transition-opacity">→</span>
+                </Link>
+              </li>
+              <li>
+                <Link href="/policies" className="text-muted-foreground hover:text-foreground hover:text-gradient transition-all text-sm font-medium inline-block group">
+                  My Policies
+                  <span className="inline-block ml-1 opacity-0 group-hover:opacity-100 transition-opacity">→</span>
+                </Link>
+              </li>
+              <li>
+                <Link href="/claim" className="text-muted-foreground hover:text-foreground hover:text-gradient transition-all text-sm font-medium inline-block group">
+                  Submit Claim
+                  <span className="inline-block ml-1 opacity-0 group-hover:opacity-100 transition-opacity">→</span>
+                </Link>
+              </li>
+              <li>
+                <Link href="/verify" className="text-muted-foreground hover:text-foreground hover:text-gradient transition-all text-sm font-medium inline-block group">
+                  Verify Transaction
+                  <span className="inline-block ml-1 opacity-0 group-hover:opacity-100 transition-opacity">→</span>
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Company Links */}
+          <div className="space-y-5">
+            <h3 className="text-sm font-bold text-foreground uppercase tracking-wider mb-2">Company</h3>
+            <ul className="space-y-3.5">
+              <li>
+                <Link href="#" className="text-muted-foreground hover:text-foreground hover:text-gradient transition-all text-sm font-medium inline-block group">
+                  About Us
+                  <span className="inline-block ml-1 opacity-0 group-hover:opacity-100 transition-opacity">→</span>
+                </Link>
+              </li>
+              <li>
+                <Link href="#" className="text-muted-foreground hover:text-foreground hover:text-gradient transition-all text-sm font-medium inline-block group">
+                  Our Team
+                  <span className="inline-block ml-1 opacity-0 group-hover:opacity-100 transition-opacity">→</span>
+                </Link>
+              </li>
+              <li>
+                <Link href="#" className="text-muted-foreground hover:text-foreground hover:text-gradient transition-all text-sm font-medium inline-block group">
+                  Careers
+                  <span className="inline-block ml-1 opacity-0 group-hover:opacity-100 transition-opacity">→</span>
+                </Link>
+              </li>
+              <li>
+                <Link href="#" className="text-muted-foreground hover:text-foreground hover:text-gradient transition-all text-sm font-medium inline-block group">
+                  Blog
+                  <span className="inline-block ml-1 opacity-0 group-hover:opacity-100 transition-opacity">→</span>
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Resources Links */}
+          <div className="space-y-5">
+            <h3 className="text-sm font-bold text-foreground uppercase tracking-wider mb-2">Resources</h3>
+            <ul className="space-y-3.5">
+              <li>
+                <Link href="#" className="text-muted-foreground hover:text-foreground hover:text-gradient transition-all text-sm font-medium inline-block group">
+                  Documentation
+                  <span className="inline-block ml-1 opacity-0 group-hover:opacity-100 transition-opacity">→</span>
+                </Link>
+              </li>
+              <li>
+                <Link href="#" className="text-muted-foreground hover:text-foreground hover:text-gradient transition-all text-sm font-medium inline-block group">
+                  API Reference
+                  <span className="inline-block ml-1 opacity-0 group-hover:opacity-100 transition-opacity">→</span>
+                </Link>
+              </li>
+              <li>
+                <Link href="#" className="text-muted-foreground hover:text-foreground hover:text-gradient transition-all text-sm font-medium inline-block group">
+                  Help Center
+                  <span className="inline-block ml-1 opacity-0 group-hover:opacity-100 transition-opacity">→</span>
+                </Link>
+              </li>
+              <li>
+                <Link href="#" className="text-muted-foreground hover:text-foreground hover:text-gradient transition-all text-sm font-medium inline-block group">
+                  Privacy Policy
+                  <span className="inline-block ml-1 opacity-0 group-hover:opacity-100 transition-opacity">→</span>
+                </Link>
+              </li>
+              <li>
+                <Link href="#" className="text-muted-foreground hover:text-foreground hover:text-gradient transition-all text-sm font-medium inline-block group">
+                  Terms of Service
+                  <span className="inline-block ml-1 opacity-0 group-hover:opacity-100 transition-opacity">→</span>
+                </Link>
+              </li>
+            </ul>
           </div>
         </div>
-        <div className="flex flex-col justify-start items-start gap-3">
-          <h3 className="text-muted-foreground text-sm font-medium leading-5">Company</h3>
-          <div className="flex flex-col justify-center items-start gap-2">
-            <a href="#" className="text-foreground text-sm font-normal leading-5 hover:underline">
-              About us
-            </a>
-            <a href="#" className="text-foreground text-sm font-normal leading-5 hover:underline">
-              Our team
-            </a>
-            <a href="#" className="text-foreground text-sm font-normal leading-5 hover:underline">
-              Careers
-            </a>
-            <a href="#" className="text-foreground text-sm font-normal leading-5 hover:underline">
-              Contact
-            </a>
-          </div>
-        </div>
-        <div className="flex flex-col justify-start items-start gap-3">
-          <h3 className="text-muted-foreground text-sm font-medium leading-5">Resources</h3>
-          <div className="flex flex-col justify-center items-start gap-2">
-            <a href="#" className="text-foreground text-sm font-normal leading-5 hover:underline">
-              Terms of Service
-            </a>
-            <a href="#" className="text-foreground text-sm font-normal leading-5 hover:underline">
-              Privacy Policy
-            </a>
-            <a href="#" className="text-foreground text-sm font-normal leading-5 hover:underline">
-              Documentation
-            </a>
-            <a href="#" className="text-foreground text-sm font-normal leading-5 hover:underline">
-              Help Center
-            </a>
-            <a href="#" className="text-foreground text-sm font-normal leading-5 hover:underline">
-              Support
-            </a>
+
+        {/* Enhanced Bottom Bar */}
+        <div className="pt-12 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-6">
+          <p className="text-sm text-muted-foreground font-medium">
+            © {new Date().getFullYear()} HyperInsure. All rights reserved.
+          </p>
+          <div className="flex items-center gap-3 px-4 py-2 rounded-full glass border border-white/10">
+            <span className="text-sm text-muted-foreground font-medium">Powered by</span>
+            <div className="flex items-center gap-2.5">
+              <img 
+                src="/stacks-stx-logo.png" 
+                alt="Stacks" 
+                className="w-5 h-5 object-contain"
+              />
+              <span className="text-sm font-bold text-gradient">Stacks</span>
+              <span className="text-sm text-muted-foreground">+</span>
+              <img 
+                src="/bitcoin-btc-logo.png" 
+                alt="Bitcoin" 
+                className="w-5 h-5 object-contain"
+              />
+              <span className="text-sm font-bold text-gradient">Bitcoin</span>
+            </div>
           </div>
         </div>
       </div>
