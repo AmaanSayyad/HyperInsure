@@ -3,17 +3,17 @@ import Image from "next/image"
 const testimonials = [
   {
     quote:
-      "HyperInsure's transaction delay coverage has been a game-changer for our DeFi platform. Their instant payouts when transactions get stuck have saved our users from significant losses during high congestion periods.",
+      "HyperInsure's Bitcoin transaction delay coverage has been a game-changer for our platform. Their on-chain verification and instant payouts when transactions get stuck have saved our users from significant losses during high congestion periods.",
     name: "Annette Black",
-    company: "BlockFi",
+    company: "Bitcoin Payment Processor",
     avatar: "/images/avatars/annette-black.png",
     type: "large-teal",
   },
   {
     quote:
-      "Integrating HyperInsure into our wallet was seamless, and their STX reserves ensured our users always received timely compensation for delayed transactions.",
+      "Integrating HyperInsure into our wallet was seamless, and their STX reserves ensured our users always received timely compensation for delayed Bitcoin transactions.",
     name: "Dianne Russell",
-    company: "Coinbase",
+    company: "Stacks Wallet",
     avatar: "/images/avatars/dianne-russell.png",
     type: "small-dark",
   },
@@ -27,33 +27,33 @@ const testimonials = [
   },
   {
     quote:
-      "We no longer worry about mempool congestion affecting our users. HyperInsure's protection has significantly improved our customer satisfaction during network stress periods.",
+      "We no longer worry about Bitcoin mempool congestion affecting our users. HyperInsure's block-based delay protection has significantly improved our customer satisfaction during network stress periods.",
     name: "Robert Fox",
-    company: "BitPay",
+    company: "Bitcoin Service Provider",
     avatar: "/images/avatars/robert-fox.png",
     type: "small-dark",
   },
   {
     quote:
-      "We started with the Basic plan just to test it out, but within a week we upgraded to Premium. Now, we can't imagine operating without HyperInsure's protection.",
+      "We started with the Starter plan just to test it out, but within a week we upgraded to Professional. Now, we can't imagine operating without HyperInsure's protection.",
     name: "Darlene Robertson",
-    company: "Binance",
+    company: "Bitcoin Exchange",
     avatar: "/images/avatars/darlene-robertson.png",
     type: "small-dark",
   },
   {
     quote:
-      "Transaction delays are now a non-issue for our exchange. With HyperInsure's coverage, our users feel confident even during periods of high market volatility.",
+      "Bitcoin transaction delays are now a non-issue for our exchange. With HyperInsure's coverage, our users feel confident even during periods of high network congestion.",
     name: "Cody Fisher",
-    company: "Kraken",
+    company: "Bitcoin Trading Platform",
     avatar: "/images/avatars/cody-fisher.png",
     type: "small-dark",
   },
   {
     quote:
-      "Implementing HyperInsure was not just simple, it felt seamless. Their non-intrusive approach meant we didn't need to modify our existing transaction flow at all, yet our users gained complete protection against delays.",
+      "Implementing HyperInsure was not just simple, it felt seamless. Their non-intrusive approach meant we didn't need to modify our existing Bitcoin transaction flow at all, yet our users gained complete protection against delays.",
     name: "Albert Flores",
-    company: "Ledger",
+    company: "Bitcoin Wallet Provider",
     avatar: "/images/avatars/albert-flores.png",
     type: "large-light",
   },
@@ -144,7 +144,7 @@ export function TestimonialGridSection() {
             Transaction Protection That Works
           </h2>
           <p className="self-stretch text-center text-muted-foreground text-sm md:text-sm lg:text-base font-medium leading-[18.20px] md:leading-relaxed lg:leading-relaxed">
-            {"Hear how blockchain platforms protect their users from transaction delays,"} <br />{" "}
+            {"Hear how platforms protect their users from Bitcoin transaction delays,"} <br />{" "}
             {"reduce financial losses, and build confidence using HyperInsure's on-chain insurance"}
           </p>
         </div>

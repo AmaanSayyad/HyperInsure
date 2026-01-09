@@ -15,17 +15,19 @@ export function LargeTestimonial() {
                 }
               </div>
               <div className="flex justify-start items-center gap-5">
-                <Image
-                  src="/images/guillermo-rauch.png"
-                  alt="Amaan"
-                  width={48}
-                  height={48}
-                  className="w-12 h-12 relative rounded-full"
-                  style={{ border: "1px solid rgba(0, 0, 0, 0.08)" }}
-                />
+                <div className="relative w-12 h-12 rounded-full overflow-hidden border border-white/10 flex-shrink-0">
+                  <Image
+                    src="/images/amaan.jpg"
+                    alt="Amaan Sayyad, CEO of HyperInsure"
+                    width={48}
+                    height={48}
+                    className="w-full h-full object-cover"
+                    priority
+                  />
+                </div>
                 <div className="flex flex-col justify-start items-start">
-                  <div className="text-foreground text-base font-medium leading-6">Amaan</div>
-                  <div className="text-muted-foreground text-sm font-normal leading-6">{"CEO, HyperInsure"}</div>
+                  <div className="text-foreground text-base font-medium leading-6">Amaan Sayyad</div>
+                  <div className="text-muted-foreground text-sm font-normal leading-6">CEO, HyperInsure</div>
                 </div>
               </div>
             </div>
