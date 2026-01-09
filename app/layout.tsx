@@ -5,6 +5,8 @@ import { Analytics } from '@vercel/analytics/next'
 import { Toaster } from 'sonner'
 import './globals.css'
 import { StacksProvider } from '@/lib/stacks-provider'
+import { Header } from '@/components/header'
+import { FooterSection } from '@/components/footer-section'
 
 export const metadata: Metadata = {
   title: 'HyperInsure - Trustless Bitcoin Transaction Insurance',
@@ -25,7 +27,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <style>{`
 html {
@@ -35,11 +37,24 @@ html {
 }
         `}</style>
       </head>
-      <body>
+      <body suppressHydrationWarning>
         <StacksProvider>
+          <Header />
           {children}
+          <FooterSection />
           <Analytics />
-          <Toaster position="top-center" richColors />
+          <Toaster 
+            position="top-center" 
+            richColors 
+            toastOptions={{
+              className: 'glass border border-white/10',
+              style: {
+                background: 'hsl(var(--card) / 0.95)',
+                backdropFilter: 'blur(20px)',
+                border: '1px solid hsl(var(--border))',
+              }
+            }}
+          />
         </StacksProvider>
       </body>
     </html>
