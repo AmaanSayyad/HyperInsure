@@ -1,4 +1,5 @@
 import { DelayedTransactionClaim } from "@/components/claim/delayed-transaction-claim"
+import { Clock, FileCheck, AlertCircle } from "lucide-react"
 
 export const metadata = {
   title: "Delayed Transaction Claim | HyperInsure",
@@ -8,71 +9,69 @@ export const metadata = {
 export default function DelayedClaimPage() {
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
-      <div className="relative z-10">
-        <div className="w-full px-5 overflow-hidden flex flex-col justify-start py-6 md:py-8 lg:py-14">
-          <div className="self-stretch py-6 md:py-8 lg:py-14 flex flex-col justify-center items-center gap-2">
-            <div className="flex flex-col justify-start items-center gap-4">
-              <h2 className="text-center text-foreground text-3xl md:text-4xl lg:text-[40px] font-semibold leading-tight md:leading-tight lg:leading-[40px]">
-                Delayed Transaction Claim
-              </h2>
-              <p className="self-stretch text-center text-muted-foreground text-sm md:text-sm lg:text-base font-medium leading-[18.20px] md:leading-relaxed lg:leading-relaxed">
-                Submit your claim for a delayed transaction to receive compensation
-              </p>
+      {/* Elegant Blue Background */}
+      <div className="absolute inset-0 -z-10">
+        <div className="absolute top-0 left-1/3 w-[600px] h-[600px] bg-primary/12 rounded-full blur-[120px] opacity-50" />
+        <div className="absolute bottom-0 right-1/3 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[100px] opacity-40" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff03_1px,transparent_1px),linear-gradient(to_bottom,#ffffff03_1px,transparent_1px)] bg-[size:80px_80px]" />
+      </div>
+
+      {/* Header */}
+
+      {/* Content */}
+      <div className="relative z-10 pt-24 pb-32 px-6">
+        <div className="max-w-5xl mx-auto">
+          {/* Page Header */}
+          <div className="text-center mb-16 space-y-6">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass border-gradient mb-4">
+              <Clock className="w-4 h-4 text-primary" />
+              <span className="text-sm font-medium">Delayed Transaction Portal</span>
+            </div>
+
+            <h1 className="text-5xl md:text-7xl font-bold tracking-tight">
+              <span className="block text-foreground mb-2">Claim for</span>
+              <span className="block text-gradient">Delayed Transactions</span>
+            </h1>
+            
+            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
+              Submit your claim for transactions that experienced unexpected delays
+            </p>
+
+            {/* Process Steps */}
+            <div className="grid md:grid-cols-3 gap-6 pt-12">
+              <div className="glass rounded-2xl p-6 border border-white/10">
+                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
+                  <AlertCircle className="w-6 h-6 text-primary" />
+                </div>
+                <h3 className="font-semibold text-foreground mb-2">1. Identify Delay</h3>
+                <p className="text-sm text-muted-foreground">
+                  Confirm your transaction delay qualifies
+                </p>
+              </div>
+              <div className="glass rounded-2xl p-6 border border-white/10">
+                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
+                  <FileCheck className="w-6 h-6 text-primary" />
+                </div>
+                <h3 className="font-semibold text-foreground mb-2">2. Provide Details</h3>
+                <p className="text-sm text-muted-foreground">
+                  Submit transaction information & proof
+                </p>
+              </div>
+              <div className="glass rounded-2xl p-6 border border-white/10">
+                <div className="w-12 h-12 rounded-xl bg-secondary/10 flex items-center justify-center mb-4">
+                  <Clock className="w-6 h-6 text-secondary" />
+                </div>
+                <h3 className="font-semibold text-foreground mb-2">3. Receive Payout</h3>
+                <p className="text-sm text-muted-foreground">
+                  Get compensated for the delay instantly
+                </p>
+              </div>
             </div>
           </div>
-          <div className="max-w-[600px] mx-auto w-full">
-            <DelayedTransactionClaim />
-          </div>
+
+          {/* Delayed Transaction Claim Component */}
+          <DelayedTransactionClaim />
         </div>
-      </div>
-      
-      {/* Background elements */}
-      <div className="absolute inset-0 top-[-90px] z-0 opacity-50">
-        <svg
-          className="w-full h-full"
-          viewBox="0 0 1388 825"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-          preserveAspectRatio="xMidYMid slice"
-        >
-          <g filter="url(#filter0_f_claim)">
-            <ellipse
-              cx="694"
-              cy="-93.0414"
-              rx="670.109"
-              ry="354.908"
-              fill="url(#paint1_radial_claim)"
-              fillOpacity="0.5"
-            />
-          </g>
-          <defs>
-            <filter
-              id="filter0_f_claim"
-              x="-234.109"
-              y="-705.949"
-              width="1856.22"
-              height="1225.82"
-              filterUnits="userSpaceOnUse"
-              colorInterpolationFilters="sRGB"
-            >
-              <feFlood floodOpacity="0" result="BackgroundImageFix" />
-              <feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape" />
-              <feGaussianBlur stdDeviation="129" result="effect1_foregroundBlur_claim" />
-            </filter>
-            <radialGradient
-              id="paint1_radial_claim"
-              cx="0"
-              cy="0"
-              r="1"
-              gradientUnits="userSpaceOnUse"
-              gradientTransform="translate(683.482 245.884) rotate(-3.78676) scale(469.009 248.4)"
-            >
-              <stop offset="0.1294" stopColor="hsl(var(--primary-dark))" />
-              <stop offset="0.2347" stopColor="hsl(var(--primary))" />
-              <stop offset="0.3" stopColor="hsl(var(--primary))" stopOpacity="0" />
-            </radialGradient>
-          </defs>
-        </svg>
       </div>
     </div>
   )
