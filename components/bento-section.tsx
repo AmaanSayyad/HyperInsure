@@ -230,13 +230,7 @@ export function BentoSection() {
         {/* Enhanced header */}
         <div className="self-stretch py-8 md:py-14 flex flex-col justify-center items-center gap-4 z-10">
           <div className="flex flex-col justify-start items-center gap-5">
-            {/* Badge */}
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass border border-primary/20">
-              <div className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse" />
-              <span className="text-xs font-medium text-primary/80 uppercase tracking-wider">
-                Process Flow
-              </span>
-            </div>
+            
             
             <h2 className="w-full max-w-[700px] text-center text-foreground text-4xl md:text-6xl lg:text-7xl font-bold leading-tight md:leading-[66px]">
               <span className="block">⚡ How HyperInsure</span>

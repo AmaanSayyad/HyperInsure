@@ -308,7 +308,7 @@ export function ClaimForm() {
       toast.error("Please select a policy purchase")
       return
     }
-
+    
     if (!txid) {
       toast.error("Please enter a Bitcoin transaction ID")
       return
@@ -438,7 +438,7 @@ export function ClaimForm() {
       const txHashBytes = hexToUint8Array(claimResult.transactionHash)
       const txPlaceholder = new Uint8Array(256) // Placeholder - should be actual transaction bytes
       const headerPlaceholder = new Uint8Array(80) // Placeholder - should be actual block header
-      
+
       const proof = tupleCV({
         'tx-index': uintCV(0),
         'hashes': listCV([]),
@@ -563,8 +563,8 @@ export function ClaimForm() {
             <div>
               <CardTitle className="text-2xl font-bold text-foreground">Submit Insurance Claim</CardTitle>
               <CardDescription className="text-muted-foreground mt-1">
-                Verify your delayed Bitcoin transaction and submit a claim
-              </CardDescription>
+            Verify your delayed Bitcoin transaction and submit a claim
+          </CardDescription>
             </div>
           </div>
         </CardHeader>
@@ -584,13 +584,13 @@ export function ClaimForm() {
                 <span className="ml-2 text-muted-foreground">Loading your purchases...</span>
               </div>
             ) : userPurchases.length === 0 ? (
-              <Alert className="border-blue-500/50 bg-blue-500/10">
+            <Alert className="border-blue-500/50 bg-blue-500/10">
                 <Shield className="h-4 w-4 text-blue-500" />
                 <AlertTitle className="text-foreground">No Active Purchases</AlertTitle>
                 <AlertDescription className="text-muted-foreground">
                   You don't have any active policy purchases. <Link href="/purchase" className="text-primary hover:underline">Purchase a policy</Link> first to submit claims.
-                </AlertDescription>
-              </Alert>
+              </AlertDescription>
+            </Alert>
             ) : (
               <>
                 <div className="space-y-2">
@@ -624,39 +624,39 @@ export function ClaimForm() {
                   )}
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="txid" className="text-foreground">Bitcoin Transaction ID</Label>
-                  <Input
-                    id="txid"
-                    placeholder="e.g., 819571907118de9fa875ea126c7b128fc1bc998d89aa4196d6ade11d1fc21461"
-                    value={txid}
-                    onChange={(e) => {
-                      setTxid(e.target.value)
-                      setClaimResult(null)
-                    }}
-                    disabled={loading}
-                    className="border-white/10 bg-white/5 focus-visible:ring-primary focus-visible:border-primary font-mono text-sm"
-                    required
-                  />
-                </div>
+            <div className="space-y-2">
+              <Label htmlFor="txid" className="text-foreground">Bitcoin Transaction ID</Label>
+              <Input
+                id="txid"
+                placeholder="e.g., 819571907118de9fa875ea126c7b128fc1bc998d89aa4196d6ade11d1fc21461"
+                value={txid}
+                onChange={(e) => {
+                  setTxid(e.target.value)
+                  setClaimResult(null)
+                }}
+                disabled={loading}
+                className="border-white/10 bg-white/5 focus-visible:ring-primary focus-visible:border-primary font-mono text-sm"
+                required
+              />
+            </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="broadcastHeight" className="text-foreground">
-                    Broadcast Block Height <span className="text-muted-foreground">(optional)</span>
-                  </Label>
-                  <Input
-                    id="broadcastHeight"
-                    type="number"
-                    placeholder="e.g., 924233"
-                    value={broadcastHeight}
-                    onChange={(e) => setBroadcastHeight(e.target.value)}
-                    disabled={loading}
-                    className="border-white/10 bg-white/5 focus-visible:ring-primary focus-visible:border-primary"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    The block height when you broadcast the transaction. If not provided, delay will be estimated from fee rate.
-                  </p>
-                </div>
+            <div className="space-y-2">
+              <Label htmlFor="broadcastHeight" className="text-foreground">
+                Broadcast Block Height <span className="text-muted-foreground">(optional)</span>
+              </Label>
+              <Input
+                id="broadcastHeight"
+                type="number"
+                placeholder="e.g., 924233"
+                value={broadcastHeight}
+                onChange={(e) => setBroadcastHeight(e.target.value)}
+                disabled={loading}
+                className="border-white/10 bg-white/5 focus-visible:ring-primary focus-visible:border-primary"
+              />
+              <p className="text-xs text-muted-foreground">
+                The block height when you broadcast the transaction. If not provided, delay will be estimated from fee rate.
+              </p>
+            </div>
               </>
             )}
           </CardContent>
@@ -716,17 +716,17 @@ export function ClaimForm() {
                 <div className="p-3 rounded-lg bg-white/5 border border-white/5">
                   <div className="text-xs text-muted-foreground mb-1">Estimated Broadcast Height</div>
                   <div className="text-foreground font-mono font-semibold">{claimResult.delayAnalysis.estimatedBroadcastHeight.toLocaleString()}</div>
-                </div>
+              </div>
                 
                 <div className="p-3 rounded-lg bg-white/5 border border-white/5">
                   <div className="text-xs text-muted-foreground mb-1">Confirmation Height</div>
                   <div className="text-foreground font-mono font-semibold">{claimResult.delayAnalysis.confirmationHeight.toLocaleString()}</div>
-                </div>
+              </div>
                 
                 <div className="p-3 rounded-lg bg-white/5 border border-white/5 col-span-2">
                   <div className="text-xs text-muted-foreground mb-1">Delay</div>
                   <div className={`font-bold text-lg ${claimResult.delayAnalysis.isDelayed ? 'text-green-400' : 'text-red-400'}`}>
-                    {claimResult.delayAnalysis.delayBlocks} blocks (~{claimResult.delayAnalysis.delayMinutes} min)
+                  {claimResult.delayAnalysis.delayBlocks} blocks (~{claimResult.delayAnalysis.delayMinutes} min)
                     {claimResult.delayAnalysis.isDelayed ? ' ✓' : ` (need ${claimResult.requiredDelayThreshold || INSURANCE_CONFIG.DELAY_THRESHOLD_BLOCKS}+)`}
                   </div>
                 </div>
@@ -738,7 +738,7 @@ export function ClaimForm() {
                     {claimResult.delayAnalysis.isLowFee && (
                       <span className="ml-2 text-yellow-400 text-xs">(low fee)</span>
                     )}
-                  </div>
+              </div>
                 </div>
               </div>
             </div>
@@ -752,27 +752,27 @@ export function ClaimForm() {
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div className="p-3 rounded-lg bg-white/5 border border-white/5 col-span-2">
                   <div className="text-xs text-muted-foreground mb-1">Transaction ID</div>
-                  <div className="truncate font-mono text-xs text-foreground flex items-center gap-2">
+                <div className="truncate font-mono text-xs text-foreground flex items-center gap-2">
                     {claimResult.transactionHash.slice(0, 20)}...
-                    <a 
-                      href={`https://www.blockchain.com/explorer/transactions/btc/${claimResult.transactionHash}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                  <a 
+                    href={`https://www.blockchain.com/explorer/transactions/btc/${claimResult.transactionHash}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
                       className="text-primary hover:underline flex items-center gap-1"
-                    >
+                  >
                       <ExternalLink className="h-3.5 w-3.5" />
                       View
-                    </a>
-                  </div>
+                  </a>
                 </div>
+              </div>
                 
                 <div className="p-3 rounded-lg bg-white/5 border border-white/5">
                   <div className="text-xs text-muted-foreground mb-1">Confirmations</div>
                   <div className={`text-foreground font-semibold ${claimResult.confirmations >= INSURANCE_CONFIG.MIN_CONFIRMATIONS ? 'text-green-400' : 'text-red-400'}`}>
-                    {claimResult.confirmations.toLocaleString()}
-                    {claimResult.confirmations >= INSURANCE_CONFIG.MIN_CONFIRMATIONS ? ' ✓' : ` (need ${INSURANCE_CONFIG.MIN_CONFIRMATIONS}+)`}
-                  </div>
+                  {claimResult.confirmations.toLocaleString()}
+                  {claimResult.confirmations >= INSURANCE_CONFIG.MIN_CONFIRMATIONS ? ' ✓' : ` (need ${INSURANCE_CONFIG.MIN_CONFIRMATIONS}+)`}
                 </div>
+              </div>
                 
                 <div className="p-3 rounded-lg bg-white/5 border border-white/5">
                   <div className="text-xs text-muted-foreground mb-1">Fee</div>
@@ -782,7 +782,7 @@ export function ClaimForm() {
                 <div className="p-3 rounded-lg bg-white/5 border border-white/5">
                   <div className="text-xs text-muted-foreground mb-1">Size</div>
                   <div className="text-foreground font-semibold">{claimResult.txSize} vB</div>
-                </div>
+              </div>
               </div>
             </div>
 

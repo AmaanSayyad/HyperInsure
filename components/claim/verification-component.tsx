@@ -108,7 +108,7 @@ export function TransactionVerification() {
         if (!response.ok) continue
         const height = await response.json()
         return typeof height === 'number' ? height : parseInt(height)
-      } catch (error) {
+    } catch (error) {
         continue
       }
     }
@@ -234,15 +234,15 @@ export function TransactionVerification() {
               <CardTitle className="text-2xl font-bold text-foreground">Verify Transaction Delay</CardTitle>
               <CardDescription className="text-muted-foreground mt-1">
                 Check if your Bitcoin transaction has been delayed enough to qualify for an insurance claim
-              </CardDescription>
+        </CardDescription>
             </div>
           </div>
-        </CardHeader>
+      </CardHeader>
         <form onSubmit={handleVerify}>
-          <CardContent className="space-y-6 relative z-10">
-            <div className="space-y-2">
+        <CardContent className="space-y-6 relative z-10">
+          <div className="space-y-2">
               <Label htmlFor="txid" className="text-foreground">Bitcoin Transaction ID</Label>
-              <Input
+            <Input
                 id="txid"
                 placeholder="e.g., 819571907118de9fa875ea126c7b128fc1bc998d89aa4196d6ade11d1fc21461"
                 value={txid}
@@ -250,46 +250,46 @@ export function TransactionVerification() {
                   setTxid(e.target.value)
                   setVerificationResult(null)
                 }}
-                disabled={loading}
+              disabled={loading}
                 className="border-white/10 bg-white/5 focus-visible:ring-primary focus-visible:border-primary font-mono text-sm"
-                required
-              />
-            </div>
-            
-            <div className="space-y-2">
+              required
+            />
+          </div>
+          
+          <div className="space-y-2">
               <Label htmlFor="broadcastHeight" className="text-foreground">
                 Broadcast Block Height <span className="text-muted-foreground">(optional)</span>
               </Label>
-              <Input
-                id="broadcastHeight"
-                type="number"
+            <Input
+              id="broadcastHeight"
+              type="number"
                 placeholder="e.g., 924233"
                 value={broadcastHeight}
                 onChange={(e) => setBroadcastHeight(e.target.value)}
-                disabled={loading}
-                className="border-white/10 bg-white/5 focus-visible:ring-primary focus-visible:border-primary"
-              />
+              disabled={loading}
+              className="border-white/10 bg-white/5 focus-visible:ring-primary focus-visible:border-primary"
+            />
               <p className="text-xs text-muted-foreground">
                 The block height when you broadcast the transaction. If not provided, we'll estimate based on fee rate.
-              </p>
-            </div>
-
+            </p>
+          </div>
+          
             {verificationResult && (
               <Alert className={
                 verificationResult.isEligible 
                   ? "border-green-500/50 bg-green-500/10" 
                   : "border-yellow-500/50 bg-yellow-500/10"
               }>
-                {verificationResult.isEligible ? (
+                  {verificationResult.isEligible ? (
                   <CheckCircle2 className="h-4 w-4 text-green-500" />
-                ) : (
+                  ) : (
                   <AlertCircle className="h-4 w-4 text-yellow-500" />
-                )}
+                  )}
                 <AlertTitle className="text-foreground">
-                  {verificationResult.isEligible 
+                    {verificationResult.isEligible
                     ? "✅ Potentially Eligible for Claim" 
                     : "⚠️ May Not Qualify"}
-                </AlertTitle>
+                  </AlertTitle>
                 <AlertDescription className="text-muted-foreground mt-2">
                   {verificationResult.eligibilityReason}
                   {verificationResult.isEligible && (
@@ -303,26 +303,26 @@ export function TransactionVerification() {
                   )}
                 </AlertDescription>
               </Alert>
-            )}
-          </CardContent>
+          )}
+        </CardContent>
           <div className="px-6 pb-6 relative z-10">
-            <Button 
-              type="submit" 
+          <Button 
+            type="submit" 
               className="w-full bg-primary text-primary-foreground hover:bg-primary/90" 
-              disabled={loading}
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Verifying Transaction...
-                </>
-              ) : (
-                "Verify Transaction Delay"
-              )}
-            </Button>
+            disabled={loading}
+          >
+            {loading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Verifying Transaction...
+              </>
+            ) : (
+              "Verify Transaction Delay"
+            )}
+          </Button>
           </div>
-        </form>
-      </Card>
+      </form>
+    </Card>
 
       {verificationResult && (
         <Card className="glass border border-white/10 overflow-hidden">

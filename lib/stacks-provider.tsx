@@ -57,17 +57,17 @@ export const StacksProvider: React.FC<StacksProviderProps> = ({ children }) => {
     if (typeof window === 'undefined') return;
     
     try {
-      if (userSession.isUserSignedIn()) {
-        setIsConnected(true);
-        const userData = userSession.loadUserData();
-        const address = userData.profile?.stxAddress?.[APP_CONFIG.NETWORK] || 
-                        userData.profile?.stxAddress?.testnet ||
-                        userData.profile?.stxAddress?.mainnet;
-        setUserAddress(address || null);
-        
-        if (APP_CONFIG.DEBUG_MODE) {
-          console.log('User already connected:', address);
-        }
+    if (userSession.isUserSignedIn()) {
+      setIsConnected(true);
+      const userData = userSession.loadUserData();
+      const address = userData.profile?.stxAddress?.[APP_CONFIG.NETWORK] || 
+                      userData.profile?.stxAddress?.testnet ||
+                      userData.profile?.stxAddress?.mainnet;
+      setUserAddress(address || null);
+      
+      if (APP_CONFIG.DEBUG_MODE) {
+        console.log('User already connected:', address);
+      }
       }
     } catch (error) {
       // Handle corrupted session data
@@ -104,15 +104,15 @@ export const StacksProvider: React.FC<StacksProviderProps> = ({ children }) => {
     redirectTo: '/',
     onFinish: () => {
       try {
-        setIsConnected(true);
-        const userData = userSession.loadUserData();
-        const address = userData.profile?.stxAddress?.[APP_CONFIG.NETWORK] || 
-                        userData.profile?.stxAddress?.testnet ||
-                        userData.profile?.stxAddress?.mainnet;
-        setUserAddress(address || null);
-        
-        if (APP_CONFIG.DEBUG_MODE) {
-          console.log('User connected:', address);
+      setIsConnected(true);
+      const userData = userSession.loadUserData();
+      const address = userData.profile?.stxAddress?.[APP_CONFIG.NETWORK] || 
+                      userData.profile?.stxAddress?.testnet ||
+                      userData.profile?.stxAddress?.mainnet;
+      setUserAddress(address || null);
+      
+      if (APP_CONFIG.DEBUG_MODE) {
+        console.log('User connected:', address);
         }
       } catch (error) {
         console.error('Error loading user data:', error);

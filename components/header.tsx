@@ -79,7 +79,7 @@ export function Header() {
         <div className="max-w-7xl mx-auto px-6 py-2">
           <div className="flex items-center justify-between">
             {/* Left - Network Status */}
-            <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3">
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 bg-secondary rounded-full animate-pulse" />
                 <Badge className="bg-accent hover:bg-accent/90 text-accent-foreground font-semibold text-xs">
@@ -152,9 +152,9 @@ export function Header() {
             {navItems.map((item) => {
               const isActive = pathname === item.href || (item.href !== "/" && pathname?.startsWith(item.href))
               return (
-                <Link
-                  key={item.name}
-                  href={item.href}
+              <Link
+                key={item.name}
+                href={item.href}
                   onClick={(e) => handleScroll(e, item.href)}
                   className={`relative px-4 py-2 rounded-full font-medium transition-all text-sm ${
                     isActive
@@ -162,12 +162,12 @@ export function Header() {
                       : "text-muted-foreground hover:text-foreground hover:bg-white/5"
                   }`}
                   title={item.description}
-                >
-                  {item.name}
+              >
+                {item.name}
                   {isActive && (
                     <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-primary" />
                   )}
-                </Link>
+              </Link>
               )
             })}
           </nav>
@@ -196,9 +196,9 @@ export function Header() {
                 size="sm"
                 className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full px-6 font-semibold shadow-lg shadow-primary/30 transition-all hover:scale-105"
               >
-                Get Coverage
-              </Button>
-            </Link>
+              Get Coverage
+            </Button>
+          </Link>
             <ConnectWalletButton className="text-sm" />
           </div>
 
@@ -220,9 +220,9 @@ export function Header() {
                 {navItems.map((item) => {
                   const isActive = pathname === item.href || (item.href !== "/" && pathname?.startsWith(item.href))
                   return (
-                    <Link
-                      key={item.name}
-                      href={item.href}
+                  <Link
+                    key={item.name}
+                    href={item.href}
                       onClick={(e) => handleScroll(e, item.href)}
                       className={`px-4 py-3 rounded-xl font-medium transition-all ${
                         isActive
@@ -236,15 +236,15 @@ export function Header() {
                           <span className="text-xs text-muted-foreground mt-0.5">{item.description}</span>
                         )}
                       </div>
-                    </Link>
+                  </Link>
                   )
                 })}
                 <div className="pt-4 space-y-2">
                   <Link href="/purchase" className="w-full block">
                     <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-full font-semibold">
-                      Get Coverage
-                    </Button>
-                  </Link>
+                    Get Coverage
+                  </Button>
+                </Link>
                   <ConnectWalletButton className="w-full" />
                 </div>
               </nav>

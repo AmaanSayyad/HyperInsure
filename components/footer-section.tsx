@@ -38,7 +38,7 @@ export function FooterSection() {
                 <Twitter className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
               </a>
               <a
-                href="https://github.com/hyperinsure"
+                href="https://github.com/AmaanSayyad/HyperInsure"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-11 h-11 rounded-xl glass border border-white/10 hover:border-primary/30 hover:bg-primary/10 flex items-center justify-center transition-all hover:scale-110 group"
@@ -56,7 +56,7 @@ export function FooterSection() {
                 <Linkedin className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
               </a>
               <a
-                href="mailto:hello@hyperinsure.io"
+                href="mailto:amaansayyad2001@gmail.com"
                 className="w-11 h-11 rounded-xl glass border border-white/10 hover:border-primary/30 hover:bg-primary/10 flex items-center justify-center transition-all hover:scale-110 group"
                 aria-label="Email"
               >

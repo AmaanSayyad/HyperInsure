@@ -138,17 +138,31 @@ export function PricingSection() {
                   </div>
 
                   {/* CTA Button */}
-                  <Link href="/purchase">
-                    <Button
-                      className={`w-full rounded-xl py-6 font-semibold text-base ${
-                        plan.popular
-                          ? "bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/30"
-                          : "glass hover:bg-white/10 border border-white/10"
-                      }`}
-                    >
-                      {plan.buttonText}
-                    </Button>
-                  </Link>
+                  {plan.buttonText === "Contact Sales" ? (
+                    <a href="mailto:amaansayyad2001@gmail.com">
+                      <Button
+                        className={`w-full rounded-xl py-6 font-semibold text-base ${
+                          plan.popular
+                            ? "bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/30"
+                            : "glass hover:bg-white/10 border border-white/10"
+                        }`}
+                      >
+                        {plan.buttonText}
+                      </Button>
+                    </a>
+                  ) : (
+                    <Link href="/purchase">
+                      <Button
+                        className={`w-full rounded-xl py-6 font-semibold text-base ${
+                          plan.popular
+                            ? "bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/30"
+                            : "glass hover:bg-white/10 border border-white/10"
+                        }`}
+                      >
+                        {plan.buttonText}
+                      </Button>
+                    </Link>
+                  )}
 
                   {/* Features */}
                   <div className="space-y-3 pt-4">

@@ -62,23 +62,23 @@ export const NetworkStatus: React.FC = () => {
       {/* Compact Header Bar */}
       <div className="glass border-b border-white/10">
         <div className="max-w-7xl mx-auto px-6 py-3">
-          <div className="flex items-center justify-between">
-            {/* Left side - Network info */}
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
+        <div className="flex items-center justify-between">
+          {/* Left side - Network info */}
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
                 <div className="w-2 h-2 bg-secondary rounded-full animate-pulse" />
                 <span className="text-sm font-medium text-foreground">Network:</span>
                 <Badge className="bg-accent hover:bg-accent/90 text-accent-foreground font-semibold">
-                  {APP_CONFIG.NETWORK.toUpperCase()}
-                </Badge>
-              </div>
-              
+                {APP_CONFIG.NETWORK.toUpperCase()}
+              </Badge>
+            </div>
+            
               <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-secondary/10">
                 <CheckCircle2 className="w-4 h-4 text-secondary" />
                 <span className="text-sm text-foreground font-medium">
                   All contracts deployed
-                </span>
-              </div>
+              </span>
+            </div>
 
               <Button
                 variant="ghost"
@@ -94,7 +94,7 @@ export const NetworkStatus: React.FC = () => {
                   <ChevronDown className="w-4 h-4 ml-1" />
                 )}
               </Button>
-            </div>
+          </div>
 
             {/* Right side - Actions */}
             <div className="flex items-center gap-3">
@@ -114,32 +114,32 @@ export const NetworkStatus: React.FC = () => {
                   </button>
                 </div>
               )}
-
-              <Button
-                variant="outline"
-                size="sm"
-                asChild
+            
+            <Button
+              variant="outline"
+              size="sm"
+              asChild
                 className="glass rounded-full text-sm border-white/10 hover:bg-white/5"
-              >
-                <a
-                  href={APP_CONFIG.EXPLORER_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
+            >
+              <a
+                href={APP_CONFIG.EXPLORER_URL}
+                target="_blank"
+                rel="noopener noreferrer"
                   className="flex items-center gap-1.5"
-                >
-                  Explorer
+              >
+                Explorer
                   <ExternalLink className="w-3.5 h-3.5" />
-                </a>
-              </Button>
+              </a>
+            </Button>
 
               <ConnectWalletButton className="text-sm" />
             </div>
           </div>
+          </div>
         </div>
-      </div>
 
       {/* Expanded Contract Panel */}
-      {isExpanded && (
+        {isExpanded && (
         <div className="absolute top-full left-0 right-0 z-50 glass border-b border-white/10 shadow-2xl">
           <div className="max-w-7xl mx-auto px-6 py-6">
             {/* Contract Grid */}
@@ -183,28 +183,28 @@ export const NetworkStatus: React.FC = () => {
                           )}
                         </button>
                         
-                        <a
+                      <a
                           href={`https://explorer.hiro.so/txid/${address}?chain=testnet&tab=overview`}
-                          target="_blank"
-                          rel="noopener noreferrer"
+                        target="_blank"
+                        rel="noopener noreferrer"
                           className="w-7 h-7 rounded-lg hover:bg-white/5 flex items-center justify-center transition-colors"
                           title="View in explorer"
-                        >
+                      >
                           <ExternalLink className="w-3.5 h-3.5 text-muted-foreground hover:text-primary" />
-                        </a>
+                      </a>
                       </div>
                     </div>
                   </div>
                 );
               })}
-            </div>
+              </div>
 
             {/* API Endpoints */}
             <div className="grid md:grid-cols-2 gap-3 pt-4 border-t border-white/10">
               <div className="flex items-center gap-3 px-4 py-3 glass rounded-xl border border-white/10">
                 <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
                   <Globe className="w-4 h-4 text-primary" />
-                </div>
+                      </div>
                 <div className="flex-1 min-w-0">
                   <div className="text-xs text-muted-foreground font-medium mb-0.5">Stacks API</div>
                   <div className="text-xs font-mono text-foreground/80 truncate">
@@ -247,7 +247,7 @@ export const NetworkStatus: React.FC = () => {
             </div>
           </div>
         </div>
-      )}
+        )}
     </div>
   );
 };

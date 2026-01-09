@@ -13,7 +13,7 @@ import { openContractCall } from "@stacks/connect"
 import { stringAsciiCV, stringUtf8CV, uintCV, AnchorMode, PostConditionMode } from "@stacks/transactions"
 import { CONTRACT_ADDRESSES, parseContractId, APP_CONFIG } from "@/lib/stacks-config"
 import { ContractInteractions } from "@/lib/contract-utils"
-import { Copy, ExternalLink, CheckCircle, Shield } from "lucide-react"
+import { Copy, ExternalLink, CheckCircle, Shield, Sparkles, Info, TrendingUp, DollarSign, Clock, FileText } from "lucide-react"
 
 export function PolicyCreator() {
   const { isConnected, userSession, network } = useStacks()
@@ -132,7 +132,7 @@ export function PolicyCreator() {
       }
 
       const { address, name } = parseContractId(contractAddress)
-      
+    
       // Convert payout to microSTX
       const payoutMicroSTX = formData.payoutPerIncident * 1000000
 
@@ -245,17 +245,17 @@ export function PolicyCreator() {
               duration: 12000,
             }
           )
-          
-          // Reset form
-          setFormData({
+    
+    // Reset form
+    setFormData({
             policyId: "",
-            policyName: "",
-            delayThreshold: 35,
-            policyDescription: "",
+      policyName: "",
+      delayThreshold: 35,
+      policyDescription: "",
             premiumPercentage: 200,
             protocolFee: 100,
-            payoutPerIncident: 500,
-          })
+      payoutPerIncident: 500,
+    })
           setIsLoading(false)
         },
         onCancel: () => {
@@ -295,173 +295,257 @@ export function PolicyCreator() {
 
   return (
     <div className="w-full">
-      <Card className="glass border border-white/10 overflow-hidden rounded-2xl">
-        <CardHeader className="relative z-10">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 rounded-lg bg-primary/10">
-              <Shield className="w-5 h-5 text-primary" />
+      <Card className="glass border border-white/10 overflow-hidden rounded-3xl relative">
+        {/* Enhanced Background Gradient */}
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 pointer-events-none" />
+        <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+        
+        <CardHeader className="relative z-10 pb-6">
+          <div className="flex items-start gap-4 mb-1">
+            <div className="p-3 rounded-2xl bg-gradient-to-br from-primary/20 via-primary/10 to-accent/10 border border-primary/30 shadow-lg shadow-primary/10">
+              <Shield className="w-6 h-6 text-primary" />
             </div>
-            <div>
-              <CardTitle className="text-2xl font-bold text-foreground">Create New Insurance Policy</CardTitle>
-              <CardDescription className="text-muted-foreground mt-1">
-                Define parameters for a new transaction delay insurance policy
+            <div className="flex-1">
+              <CardTitle className="text-3xl font-bold text-foreground mb-2 flex items-center gap-2">
+                Create New Insurance Policy
+                <Sparkles className="w-5 h-5 text-primary animate-pulse" />
+              </CardTitle>
+              <CardDescription className="text-muted-foreground text-base leading-relaxed">
+                Define parameters for a new transaction delay insurance policy. All values are stored on-chain and cannot be modified after creation.
               </CardDescription>
             </div>
           </div>
         </CardHeader>
         <form onSubmit={handleSubmit}>
-          <CardContent className="space-y-6 relative z-10">
+          <CardContent className="space-y-8 relative z-10 pt-2">
             {!isConnected && (
-              <div className="p-4 rounded-lg glass border border-yellow-500/20 bg-yellow-500/5">
-                <p className="text-sm font-medium text-yellow-400">
-                  Please connect your wallet to create policies
-                </p>
+              <div className="p-5 rounded-2xl glass border-2 border-yellow-500/30 bg-gradient-to-br from-yellow-500/10 via-yellow-500/5 to-transparent backdrop-blur-sm">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-yellow-500/20">
+                    <Info className="w-5 h-5 text-yellow-400" />
+                  </div>
+                  <p className="text-sm font-semibold text-yellow-300">
+                    Please connect your wallet to create policies
+                  </p>
+                </div>
               </div>
             )}
             
-            <div className="space-y-2">
-              <Label htmlFor="policyId" className="text-foreground">
-                Policy ID <span className="text-muted-foreground text-xs">(max 20 characters, must be unique)</span>
-              </Label>
-              <div className="flex gap-2">
+            {/* Basic Information Section */}
+            <div className="space-y-6">
+              <div className="flex items-center gap-2 pb-2 border-b border-white/10">
+                <FileText className="w-5 h-5 text-primary" />
+                <h3 className="text-lg font-semibold text-foreground">Basic Information</h3>
+              </div>
+              
+              <div className="space-y-3">
+                <Label htmlFor="policyId" className="text-foreground font-semibold flex items-center gap-2">
+                  <span>Policy ID</span>
+                  <span className="text-xs font-normal text-muted-foreground">(max 20 characters, must be unique)</span>
+                </Label>
+                <div className="flex gap-3">
+                  <Input
+                    id="policyId"
+                    name="policyId"
+                    placeholder="e.g., POL-004"
+                    value={formData.policyId}
+                    onChange={handleInputChange}
+                    className="border-white/10 bg-white/5 focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:border-primary/50 rounded-xl h-12 text-base transition-all"
+                    required
+                    maxLength={20}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setFormData(prev => ({ ...prev, policyId: getNextPolicyId() }))}
+                    className="whitespace-nowrap px-6 rounded-xl border-white/10 hover:bg-white/10 hover:border-primary/30 transition-all"
+                    title="Generate next available Policy ID"
+                  >
+                    <Sparkles className="w-4 h-4 mr-2" />
+                    Next ID
+                  </Button>
+                </div>
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <Info className="w-3.5 h-3.5" />
+                  <span>Suggested: <span className="font-mono font-semibold text-foreground/80">{getNextPolicyId()}</span>. Each policy ID must be unique.</span>
+                </div>
+              </div>
+              
+              <div className="space-y-3">
+                <Label htmlFor="policyName" className="text-foreground font-semibold">Policy Name</Label>
                 <Input
-                  id="policyId"
-                  name="policyId"
-                  placeholder="e.g., POL-004"
-                  value={formData.policyId}
+                  id="policyName"
+                  name="policyName"
+                  placeholder="e.g., Standard Transaction Delay Coverage"
+                  value={formData.policyName}
                   onChange={handleInputChange}
-                  className="border-white/10 bg-white/5 focus-visible:ring-primary focus-visible:border-primary"
+                  className="border-white/10 bg-white/5 focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:border-primary/50 rounded-xl h-12 text-base transition-all"
                   required
-                  maxLength={20}
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setFormData(prev => ({ ...prev, policyId: getNextPolicyId() }))}
-                  className="whitespace-nowrap"
-                  title="Generate next available Policy ID"
-                >
-                  Next ID
-                </Button>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Suggested: {getNextPolicyId()}. Each policy ID must be unique.
-              </p>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="policyName" className="text-foreground">Policy Name</Label>
-              <Input
-                id="policyName"
-                name="policyName"
-                placeholder="e.g., Standard Transaction Delay Coverage"
-                value={formData.policyName}
-                onChange={handleInputChange}
-                className="border-white/10 bg-white/5 focus-visible:ring-primary focus-visible:border-primary"
-                required
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="policyDescription" className="text-foreground">Policy Description</Label>
-              <Textarea
-                id="policyDescription"
-                name="policyDescription"
-                placeholder="Describe the coverage details and conditions"
-                value={formData.policyDescription}
-                onChange={handleInputChange}
-                className="border-white/10 bg-white/5 focus-visible:ring-primary focus-visible:border-primary"
-                required
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="delayThreshold" className="text-foreground">
-                Delay Threshold (blocks) - {formData.delayThreshold}
-              </Label>
-              <div className="pt-2">
-                <Slider
-                  id="delayThreshold"
-                  min={10}
-                  max={100}
-                  step={1}
-                  defaultValue={[formData.delayThreshold]}
-                  onValueChange={(value) => handleSliderChange("delayThreshold", value)}
-                  className="py-2"
                 />
               </div>
-              <p className="text-sm text-muted-foreground">
-                Number of blocks before a transaction is considered delayed
-              </p>
+              
+              <div className="space-y-3">
+                <Label htmlFor="policyDescription" className="text-foreground font-semibold">Policy Description</Label>
+                <Textarea
+                  id="policyDescription"
+                  name="policyDescription"
+                  placeholder="Describe the coverage details and conditions..."
+                  value={formData.policyDescription}
+                  onChange={handleInputChange}
+                  className="border-white/10 bg-white/5 focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:border-primary/50 rounded-xl min-h-[120px] text-base transition-all resize-none"
+                  required
+                />
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span className="flex items-center gap-1.5">
+                    <Info className="w-3.5 h-3.5" />
+                    <span>Provide clear details about coverage terms and conditions</span>
+                  </span>
+                  <span className="font-mono">{formData.policyDescription.length}/500</span>
+                </div>
+              </div>
             </div>
             
-            <div className="space-y-2">
-              <Label htmlFor="premiumPercentage" className="text-foreground">
-                Premium Percentage (basis points) - {formData.premiumPercentage/100}%
-              </Label>
-              <div className="pt-2">
-                <Slider
-                  id="premiumPercentage"
-                  min={10}
-                  max={1000}
-                  step={10}
-                  value={[formData.premiumPercentage]}
-                  onValueChange={(value) => handleSliderChange("premiumPercentage", value)}
-                  className="py-2"
-                />
+            {/* Policy Parameters Section */}
+            <div className="space-y-6">
+              <div className="flex items-center gap-2 pb-2 border-b border-white/10">
+                <TrendingUp className="w-5 h-5 text-primary" />
+                <h3 className="text-lg font-semibold text-foreground">Policy Parameters</h3>
               </div>
-              <p className="text-sm text-muted-foreground">
-                Premium as % of coverage amount (100 = 1%, 200 = 2%, 1000 = 10%)
-              </p>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="protocolFee" className="text-foreground">
-                Protocol Fee (basis points) - {formData.protocolFee/100}%
-              </Label>
-              <div className="pt-2">
-                <Slider
-                  id="protocolFee"
-                  min={10}
-                  max={500}
-                  step={10}
-                  value={[formData.protocolFee]}
-                  onValueChange={(value) => handleSliderChange("protocolFee", value)}
-                  className="py-2"
-                />
+              
+              <div className="grid md:grid-cols-2 gap-6">
+                {/* Delay Threshold */}
+                <div className="space-y-4 p-5 rounded-2xl glass border border-white/10 bg-gradient-to-br from-primary/5 via-transparent to-transparent hover:border-primary/30 transition-all">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="delayThreshold" className="text-foreground font-semibold flex items-center gap-2">
+                      <Clock className="w-4 h-4 text-primary" />
+                      Delay Threshold
+                    </Label>
+                    <div className="px-3 py-1.5 rounded-lg bg-primary/20 border border-primary/30">
+                      <span className="text-lg font-bold text-primary">{formData.delayThreshold}</span>
+                      <span className="text-xs text-muted-foreground ml-1">blocks</span>
+                    </div>
+                  </div>
+                  <div className="pt-1">
+                    <Slider
+                      id="delayThreshold"
+                      min={10}
+                      max={100}
+                      step={1}
+                      defaultValue={[formData.delayThreshold]}
+                      onValueChange={(value) => handleSliderChange("delayThreshold", value)}
+                      className="py-2"
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground flex items-start gap-1.5">
+                    <Info className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
+                    <span>Number of blocks before a transaction is considered delayed</span>
+                  </p>
+                </div>
+                
+                {/* Premium Percentage */}
+                <div className="space-y-4 p-5 rounded-2xl glass border border-white/10 bg-gradient-to-br from-accent/5 via-transparent to-transparent hover:border-accent/30 transition-all">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="premiumPercentage" className="text-foreground font-semibold flex items-center gap-2">
+                      <TrendingUp className="w-4 h-4 text-accent" />
+                      Premium Rate
+                    </Label>
+                    <div className="px-3 py-1.5 rounded-lg bg-accent/20 border border-accent/30">
+                      <span className="text-lg font-bold text-accent">{formData.premiumPercentage/100}%</span>
+                    </div>
+                  </div>
+                  <div className="pt-1">
+                    <Slider
+                      id="premiumPercentage"
+                      min={10}
+                      max={1000}
+                      step={10}
+                      value={[formData.premiumPercentage]}
+                      onValueChange={(value) => handleSliderChange("premiumPercentage", value)}
+                      className="py-2"
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground flex items-start gap-1.5">
+                    <Info className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
+                    <span>Premium as % of coverage (100 = 1%, 200 = 2%, 1000 = 10%)</span>
+                  </p>
+                </div>
+                
+                {/* Protocol Fee */}
+                <div className="space-y-4 p-5 rounded-2xl glass border border-white/10 bg-gradient-to-br from-secondary/5 via-transparent to-transparent hover:border-secondary/30 transition-all">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="protocolFee" className="text-foreground font-semibold flex items-center gap-2">
+                      <DollarSign className="w-4 h-4 text-secondary" />
+                      Protocol Fee
+                    </Label>
+                    <div className="px-3 py-1.5 rounded-lg bg-secondary/20 border border-secondary/30">
+                      <span className="text-lg font-bold text-secondary">{formData.protocolFee/100}%</span>
+                    </div>
+                  </div>
+                  <div className="pt-1">
+                    <Slider
+                      id="protocolFee"
+                      min={10}
+                      max={500}
+                      step={10}
+                      value={[formData.protocolFee]}
+                      onValueChange={(value) => handleSliderChange("protocolFee", value)}
+                      className="py-2"
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground flex items-start gap-1.5">
+                    <Info className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
+                    <span>Protocol fee percentage (100 = 1%, 150 = 1.5%)</span>
+                  </p>
+                </div>
+                
+                {/* Payout per Incident */}
+                <div className="space-y-4 p-5 rounded-2xl glass border border-white/10 bg-gradient-to-br from-primary/5 via-accent/5 to-transparent hover:border-primary/30 transition-all">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="payoutPerIncident" className="text-foreground font-semibold flex items-center gap-2">
+                      <DollarSign className="w-4 h-4 text-primary" />
+                      Payout per Incident
+                    </Label>
+                    <div className="px-3 py-1.5 rounded-lg bg-primary/20 border border-primary/30">
+                      <span className="text-lg font-bold text-primary">{formData.payoutPerIncident}</span>
+                      <span className="text-xs text-muted-foreground ml-1">STX</span>
+                    </div>
+                  </div>
+                  <div className="pt-1">
+                    <Slider
+                      id="payoutPerIncident"
+                      min={100}
+                      max={10000}
+                      step={100}
+                      value={[formData.payoutPerIncident]}
+                      onValueChange={(value) => handleSliderChange("payoutPerIncident", value)}
+                      className="py-2"
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground flex items-start gap-1.5">
+                    <Info className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
+                    <span>Fixed amount paid out for each valid claim (in STX)</span>
+                  </p>
+                </div>
               </div>
-              <p className="text-sm text-muted-foreground">
-                Protocol fee percentage (100 = 1%, 150 = 1.5%)
-              </p>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="payoutPerIncident" className="text-foreground">
-                Payout per Incident (STX) - {formData.payoutPerIncident} STX
-              </Label>
-              <div className="pt-2">
-                <Slider
-                  id="payoutPerIncident"
-                  min={100}
-                  max={10000}
-                  step={100}
-                  value={[formData.payoutPerIncident]}
-                  onValueChange={(value) => handleSliderChange("payoutPerIncident", value)}
-                  className="py-2"
-                />
-              </div>
-              <p className="text-sm text-muted-foreground">
-                Fixed amount paid out for each valid claim (in STX)
-              </p>
             </div>
           </CardContent>
-          <CardFooter className="relative z-10">
+          <CardFooter className="relative z-10 pt-6">
             <Button 
               type="submit" 
               disabled={!isConnected || isLoading}
-              className="w-full bg-secondary text-secondary-foreground hover:bg-secondary/90 px-8 py-3 rounded-full font-medium text-base shadow-lg ring-1 ring-white/10 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-6 rounded-2xl font-semibold text-base shadow-2xl shadow-primary/30 hover:shadow-primary/40 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:shadow-primary/30 flex items-center justify-center gap-2"
             >
-              {isLoading ? "Creating Policy..." : "Create Policy"}
+              {isLoading ? (
+                <>
+                  <div className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+                  <span>Creating Policy...</span>
+                </>
+              ) : (
+                <>
+                  <Shield className="w-5 h-5" />
+                  <span>Create Policy</span>
+                </>
+              )}
             </Button>
           </CardFooter>
         </form>

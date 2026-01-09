@@ -70,7 +70,7 @@ export default function DelayedClaimPage() {
           </div>
 
           {/* Delayed Transaction Claim Component */}
-          <DelayedTransactionClaim />
+            <DelayedTransactionClaim />
         </div>
       </div>
     </div>

@@ -60,21 +60,21 @@ export default function ClaimPage() {
               </div>
               <div className="glass rounded-2xl p-8 border border-white/10 hover:border-secondary/30 transition-all relative overflow-hidden group">
                 <div className="absolute inset-0 bg-gradient-to-br from-secondary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                <div className="relative z-10">
+      <div className="relative z-10">
                   <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-secondary/20 via-secondary/15 to-secondary/10 border border-secondary/20 flex items-center justify-center mb-6 shadow-lg shadow-secondary/10 group-hover:shadow-secondary/20 group-hover:scale-110 transition-all">
                     <Clock className="w-8 h-8 text-secondary" />
                   </div>
                   <h3 className="font-bold text-xl text-foreground mb-3 group-hover:text-secondary transition-colors">3. Get Payout</h3>
                   <p className="text-sm text-muted-foreground leading-relaxed">
                     Receive instant verification & automatic payment
-                  </p>
+              </p>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Claim Form Component */}
-          <ClaimForm />
+            <ClaimForm />
 
           {/* Help & Information Section */}
           <div className="grid md:grid-cols-2 gap-6 mt-12">

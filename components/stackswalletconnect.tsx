@@ -44,10 +44,10 @@ export const StacksWalletProvider = ({ children }: StacksWalletProviderProps) =>
               if (Array.isArray(addresses) && addresses.length > 0) {
                 const addressStrings = addresses.map((addr: any) => 
                   typeof addr === 'string' ? addr : addr?.address || addr
-                );
-                setAddresses(addressStrings);
-                setSelectedAddress(addressStrings[0]);
-                console.log('✅ Restored addresses from storage:', addressStrings);
+            );
+            setAddresses(addressStrings);
+            setSelectedAddress(addressStrings[0]);
+            console.log('✅ Restored addresses from storage:', addressStrings);
               }
             } catch (parseError) {
               console.error('❌ Error parsing storage data:', parseError);
@@ -96,12 +96,12 @@ export const StacksWalletProvider = ({ children }: StacksWalletProviderProps) =>
               if (Array.isArray(addresses) && addresses.length > 0) {
                 const addressStrings = addresses.map((addr: any) => 
                   typeof addr === 'string' ? addr : addr?.address || addr
-                );
-                setAddresses(addressStrings);
-                setSelectedAddress(addressStrings[0]);
-                console.log('✅ Used stored addresses:', addressStrings);
-              } else {
-                console.log('⚠️ No addresses found in response or storage');
+              );
+              setAddresses(addressStrings);
+              setSelectedAddress(addressStrings[0]);
+              console.log('✅ Used stored addresses:', addressStrings);
+            } else {
+              console.log('⚠️ No addresses found in response or storage');
               }
             } else {
               console.log('⚠️ No storage data found');

@@ -273,7 +273,7 @@ export function PolicyPurchase() {
               if (!purchases.includes(purchaseId)) {
                 purchases.push(purchaseId)
                 localStorage.setItem(storageKey, JSON.stringify(purchases))
-              }
+            }
             } catch (error) {
               console.error("Error saving purchase ID:", error)
             }
@@ -355,7 +355,7 @@ export function PolicyPurchase() {
               </div>
             </div>
           </div>
-        </div>
+            </div>
       )}
 
       {/* Policy Cards */}
@@ -366,7 +366,7 @@ export function PolicyPurchase() {
           
           return (
             <div
-              key={policy.id}
+            key={policy.id} 
               onClick={() => handlePolicySelect(policy)}
               className={`group relative rounded-3xl p-6 cursor-pointer transition-all ${
                 isSelected
@@ -376,13 +376,13 @@ export function PolicyPurchase() {
                   : "glass border border-white/10 hover:border-white/20"
               }`}
             >
-              {policy.popular && (
+            {policy.popular && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                   <span className="px-4 py-1 bg-accent text-black text-xs font-bold rounded-full">
                     MOST POPULAR
                   </span>
-                </div>
-              )}
+              </div>
+            )}
 
               {isSelected && (
                 <div className="absolute -top-3 -right-3">
@@ -455,24 +455,24 @@ export function PolicyPurchase() {
             </div>
           </div>
 
-          <div className="space-y-4">
-            <div className="space-y-2">
+              <div className="space-y-4">
+                <div className="space-y-2">
               <Label htmlFor="stxAmount" className="text-sm font-medium text-foreground">
                 Coverage Amount (STX)
               </Label>
-              <Input
-                id="stxAmount"
-                type="number"
+                  <Input
+                    id="stxAmount"
+                    type="number"
                 step="0.000001"
-                placeholder="Enter STX amount"
-                value={stxAmount}
-                onChange={(e) => setStxAmount(e.target.value)}
+                    placeholder="Enter STX amount"
+                    value={stxAmount}
+                    onChange={(e) => setStxAmount(e.target.value)}
                 className="h-12 bg-white/5 border-white/10 focus:border-primary rounded-xl text-lg"
                 disabled={isLoading}
-              />
-            </div>
-
-            {stxAmount && parseFloat(stxAmount) > 0 && (
+                  />
+                </div>
+                
+                {stxAmount && parseFloat(stxAmount) > 0 && (
               <div className="glass rounded-xl p-4 border border-white/10 space-y-2">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Premium Rate</span>
@@ -490,39 +490,39 @@ export function PolicyPurchase() {
                   <span className="text-muted-foreground">Protocol Fee</span>
                   <span className="text-foreground font-medium">
                     {(selectedPolicy.protocolFee / 100).toFixed(1)}%
-                  </span>
-                </div>
+                      </span>
+                    </div>
                 <div className="flex justify-between text-sm pt-2 border-t border-white/10">
                   <span className="text-muted-foreground">Delay Threshold</span>
                   <span className="text-gradient font-bold">
                     {selectedPolicy.delayThreshold} blocks
-                  </span>
-                </div>
+                      </span>
+                    </div>
                 <div className="text-xs text-muted-foreground pt-1">
                   Coverage applies if delay exceeds this threshold
-                </div>
+                    </div>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
 
-          <Button
-            type="submit"
+              <Button 
+                type="submit" 
             disabled={!isConnected || isLoading || !stxAmount || parseFloat(stxAmount) <= 0}
             className="w-full h-14 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl font-semibold text-lg shadow-lg shadow-primary/30 group"
-          >
-            {isLoading ? (
-              <>
+              >
+                {isLoading ? (
+                  <>
                 <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                Processing...
-              </>
-            ) : (
+                    Processing...
+                  </>
+                ) : (
               <>
                 Purchase Coverage
                 <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
               </>
-            )}
-          </Button>
-        </form>
+                )}
+              </Button>
+          </form>
       )}
     </div>
   )

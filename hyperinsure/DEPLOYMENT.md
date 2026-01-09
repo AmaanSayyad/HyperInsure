@@ -438,4 +438,4 @@ For contract upgrades:
 For deployment support:
 - GitHub Issues: [Project Repository]
 - Discord: [Stacks Discord]
-- Email: [Support Email]
+- Email: amaansayyad2001@gmail.com

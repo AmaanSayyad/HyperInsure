@@ -117,11 +117,7 @@ export function FAQSection() {
       <div className="max-w-4xl mx-auto relative z-10">
         {/* Header */}
         <div className="text-center mb-16 space-y-6">
-          <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full glass border border-primary/20 mb-2">
-            <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
-            <HelpCircle className="w-4 h-4 text-primary" />
-            <span className="text-sm font-semibold text-foreground">FAQ</span>
-          </div>
+          
 
           <h2 className="text-4xl md:text-6xl lg:text-7xl font-bold leading-tight">
             <span className="text-foreground">Frequently Asked </span>
@@ -166,7 +162,7 @@ export function FAQSection() {
               </p>
               
               <a
-                href="mailto:support@hyperinsure.io"
+                href="mailto:amaansayyad2001@gmail.com"
                 className="inline-flex items-center gap-2 px-8 py-4 bg-primary hover:bg-primary/90 text-primary-foreground rounded-2xl font-semibold text-base transition-all hover:scale-105 shadow-lg shadow-primary/30"
               >
                 <Mail className="w-5 h-5" />
