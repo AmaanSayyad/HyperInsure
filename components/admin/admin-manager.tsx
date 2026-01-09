@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label"
 import { toast } from "sonner"
 import { useStacks } from "@/lib/stacks-provider"
 import { openContractCall } from "@stacks/connect"
-import { AnchorMode, PostConditionMode, principal } from "@stacks/transactions"
+import { AnchorMode, PostConditionMode, standardPrincipalCV } from "@stacks/transactions"
 import { CONTRACT_ADDRESSES, parseContractId, APP_CONFIG } from "@/lib/stacks-config"
 import { ContractInteractions } from "@/lib/contract-utils"
 import { Shield, UserCheck, AlertTriangle, Copy, ExternalLink, LogIn, Key } from "lucide-react"
@@ -120,7 +120,7 @@ export function AdminManager() {
         contractName: name,
         functionName: 'set-admin',
         functionArgs: [
-          principal(newAdminAddress.trim()),
+          standardPrincipalCV(newAdminAddress.trim()),
         ],
         network: {
           url: APP_CONFIG.STACKS_API_URL,
@@ -136,8 +136,8 @@ export function AdminManager() {
           }
           
           toast.custom(
-            (t) => (
-              <div className={`glass rounded-2xl p-6 border border-white/10 shadow-2xl min-w-[420px] max-w-[500px] transition-all duration-300 ${t.visible ? 'animate-in slide-in-from-top-5' : 'animate-out slide-out-to-top-5'}`}>
+            (t: any) => (
+              <div className={`glass rounded-2xl p-6 border border-white/10 shadow-2xl min-w-[420px] max-w-[500px] transition-all duration-300 ${t?.visible ? 'animate-in slide-in-from-top-5' : 'animate-out slide-out-to-top-5'}`}>
                 <div className="flex flex-col gap-5">
                   {/* Header */}
                   <div className="flex items-start gap-4">
@@ -179,7 +179,7 @@ export function AdminManager() {
                   <button
                     onClick={() => {
                       window.open(explorerUrl, '_blank')
-                      toast.dismiss(t.id)
+                      toast.dismiss(t?.id)
                     }}
                     className="w-full flex items-center justify-center gap-2.5 px-5 py-3.5 rounded-xl bg-gradient-to-r from-accent/20 via-accent/15 to-accent/10 hover:from-accent/30 hover:via-accent/20 hover:to-accent/15 border border-accent/40 hover:border-accent/60 transition-all text-sm font-semibold text-accent hover:text-accent/90 group shadow-lg shadow-accent/10 hover:shadow-accent/20 active:scale-[0.98]"
                   >
