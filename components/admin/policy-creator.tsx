@@ -535,7 +535,7 @@ export function PolicyCreator() {
                       id="payoutPerIncident"
                       min={100}
                       max={10000}
-                      step={100}
+                      step={50}
                       value={[formData.payoutPerIncident]}
                       onValueChange={(value) => handleSliderChange("payoutPerIncident", value)}
                       className="py-2"
@@ -543,7 +543,7 @@ export function PolicyCreator() {
                   </div>
                   <p className="text-xs text-muted-foreground flex items-start gap-1.5">
                     <Info className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
-                    <span>Fixed amount paid out for each valid claim (in STX)</span>
+                    <span>Fixed amount paid out for each valid claim (in STX, increments of 50)</span>
                   </p>
                 </div>
               </div>

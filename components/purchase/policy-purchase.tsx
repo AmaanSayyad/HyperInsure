@@ -136,8 +136,14 @@ export function PolicyPurchase() {
         
         const policies: Policy[] = []
         
+        // Fetch policies sequentially to avoid CORS rate limiting
         for (const policyId of allPolicyIds) {
           try {
+            // Add small delay between requests to avoid rate limiting
+            if (policies.length > 0) {
+              await new Promise(resolve => setTimeout(resolve, 200))
+            }
+            
             const policyData = await contractInteractions.getPolicyV2(policyId)
             if (policyData && (policyData.active?.value === true || policyData.active === true)) {
               const delayThreshold = parseInt(
@@ -190,6 +196,8 @@ export function PolicyPurchase() {
                   `${payoutPerIncident} STX payout`,
                 ]
               })
+              
+              console.log(`✅ Loaded policy ${policyId}`)
             }
           } catch (error) {
             console.log(`Policy ${policyId} not found or inactive`)
@@ -198,7 +206,7 @@ export function PolicyPurchase() {
         
         if (policies.length > 0) {
           setAvailablePolicies(policies)
-          console.log(`Loaded ${policies.length} active policies from contract`)
+          console.log(`✅ Loaded ${policies.length} active policies from contract`)
         } else {
           console.log("No active policies found, using defaults")
           setAvailablePolicies(defaultPolicies)
