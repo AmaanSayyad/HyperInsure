@@ -451,6 +451,22 @@ export function PolicyPurchase() {
               if (!purchases.includes(purchaseId)) {
                 purchases.push(purchaseId)
                 localStorage.setItem(storageKey, JSON.stringify(purchases))
+                
+                // Save purchase metadata for fallback when contract data is unavailable
+                const metadataKey = `hyperinsure_purchase_metadata_${purchaseId}`
+                const metadata = {
+                  purchaseId,
+                  policyId: selectedPolicy.id,
+                  coverageAmount: coverageAmount,
+                  premiumPaid: premium,
+                  feePaid: fee,
+                  totalCost: totalCost,
+                  timestamp: Date.now(),
+                  txId: data.txId,
+                  userAddress: userAddress,
+                }
+                localStorage.setItem(metadataKey, JSON.stringify(metadata))
+                console.log(`💾 Saved purchase metadata for ${purchaseId}`)
             }
             } catch (error) {
               console.error("Error saving purchase ID:", error)

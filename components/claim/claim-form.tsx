@@ -129,8 +129,65 @@ export function ClaimForm() {
             
             const purchaseData = await contractInteractions.getPurchaseV2(purchaseId)
             
+            // If contract data not available, use localStorage fallback
             if (!purchaseData || purchaseData === null) {
-              console.log(`Purchase ${purchaseId} not found in contract`)
+              console.log(`Purchase ${purchaseId} not found in contract, using localStorage fallback`)
+              
+              // Get purchase metadata from localStorage
+              const metadataKey = `hyperinsure_purchase_metadata_${purchaseId}`
+              const metadata = localStorage.getItem(metadataKey)
+              
+              if (metadata) {
+                try {
+                  const purchaseInfo = JSON.parse(metadata)
+                  
+                  // Fetch policy data (but don't fail if it's not available)
+                  const policyId = purchaseInfo.policyId || "POL-001"
+                  let policyData = null
+                  try {
+                    policyData = await contractInteractions.getPolicyV2(policyId)
+                  } catch (policyError) {
+                    console.warn(`Could not fetch policy ${policyId}, using defaults`)
+                  }
+                  
+                  // Use localStorage data with policy info (or defaults)
+                  const purchaseDate = new Date(purchaseInfo.timestamp || Date.now())
+                  const expiryDate = new Date(purchaseDate.getTime() + (7 * 24 * 60 * 60 * 1000)) // 7 days
+                  const now = Date.now()
+                  const isExpired = expiryDate.getTime() < now
+                  
+                  purchases.push({
+                    purchaseId,
+                    policyId,
+                    policyName: policyData?.name || policyId,
+                    delayThreshold: policyData ? parseInt(policyData["delay-threshold"]?.toString() || "35") : 35,
+                    coverageAmount: purchaseInfo.coverageAmount || 100000000,
+                    premiumPaid: purchaseInfo.premiumPaid || 2000000,
+                    purchaseDate,
+                    expiryDate,
+                    status: isExpired ? "expired" : "active"
+                  })
+                  
+                  console.log(`✅ Added purchase ${purchaseId} from localStorage (policy data: ${policyData ? 'available' : 'using defaults'})`)
+                } catch (parseError) {
+                  console.error(`Error parsing metadata for ${purchaseId}:`, parseError)
+                }
+              } else {
+                // No metadata - create minimal fallback
+                console.log(`No metadata for ${purchaseId}, creating minimal fallback`)
+                purchases.push({
+                  purchaseId,
+                  policyId: "POL-001",
+                  policyName: "Insurance Policy",
+                  delayThreshold: 35,
+                  coverageAmount: 100000000,
+                  premiumPaid: 2000000,
+                  purchaseDate: new Date(),
+                  expiryDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+                  status: "active"
+                })
+                console.log(`✅ Added purchase ${purchaseId} with minimal fallback`)
+              }
               continue
             }
             

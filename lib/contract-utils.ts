@@ -451,11 +451,28 @@ export class ContractInteractions {
         return null;
       }
 
+      // DEBUG: Log the actual structure
+      console.log(`🔍 DEBUG getPurchaseV2 ${purchaseId}:`, {
+        resultType: result.type,
+        resultValue: (result as any).value,
+        resultData: (result as any).data,
+        resultKeys: Object.keys(result),
+        fullResult: result
+      });
+
       // Handle optional/some wrapper - Stacks.js uses 'value' property
       let tupleValue = result;
       if (result.type === 'optional' || result.type === 'some' || (result as any).value) {
         tupleValue = (result as any).value;
       }
+      
+      console.log(`🔍 DEBUG tupleValue:`, {
+        type: tupleValue?.type,
+        data: tupleValue?.data,
+        dataType: typeof tupleValue?.data,
+        isMap: tupleValue?.data instanceof Map,
+        dataKeys: tupleValue?.data ? Object.keys(tupleValue.data) : 'no data'
+      });
       
       // Stacks.js tuple structure: tupleValue.data is a Map with field names as keys
       if (tupleValue && tupleValue.type === 'tuple' && tupleValue.data) {
@@ -480,18 +497,23 @@ export class ContractInteractions {
           return cv.value !== undefined ? cv.value : cv.data !== undefined ? cv.data : cv;
         };
         
-        return {
-          'policy-id': extractCV(data.get('policy-id')),
-          'purchaser': extractCV(data.get('purchaser')),
-          'stx-amount': extractCV(data.get('stx-amount')),
-          'premium-paid': extractCV(data.get('premium-paid')),
-          'fee-paid': extractCV(data.get('fee-paid')),
-          'active': extractCV(data.get('active')),
-          'created-at': extractCV(data.get('created-at')),
-          'expiry': extractCV(data.get('expiry')),
+        // Try Map.get() first, then object property access
+        const extracted = {
+          'policy-id': extractCV(data.get ? data.get('policy-id') : data['policy-id']),
+          'purchaser': extractCV(data.get ? data.get('purchaser') : data['purchaser']),
+          'stx-amount': extractCV(data.get ? data.get('stx-amount') : data['stx-amount']),
+          'premium-paid': extractCV(data.get ? data.get('premium-paid') : data['premium-paid']),
+          'fee-paid': extractCV(data.get ? data.get('fee-paid') : data['fee-paid']),
+          'active': extractCV(data.get ? data.get('active') : data['active']),
+          'created-at': extractCV(data.get ? data.get('created-at') : data['created-at']),
+          'expiry': extractCV(data.get ? data.get('expiry') : data['expiry']),
         };
+        
+        console.log(`✅ Extracted purchase data:`, extracted);
+        return extracted;
       }
       
+      console.warn(`❌ Could not parse tuple for ${purchaseId}`);
       return null;
     } catch (error) {
       console.error('Error getting purchase V2:', error);
