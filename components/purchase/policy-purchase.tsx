@@ -126,97 +126,93 @@ export function PolicyPurchase() {
       if (!contractInteractions) return
       
       setLoadingPolicies(true)
-      try {
-        // Get created policy IDs from localStorage
-        const stored = localStorage.getItem('hyperinsure_created_policies')
-        const policyIds: string[] = stored ? JSON.parse(stored) : []
-        
-        // Also try default IDs
-        const allPolicyIds = [...new Set([...policyIds, "POL-001", "POL-002", "POL-003"])]
-        
-        const policies: Policy[] = []
-        
-        // Fetch policies sequentially to avoid CORS rate limiting
-        for (const policyId of allPolicyIds) {
-          try {
-            // Add small delay between requests to avoid rate limiting
-            if (policies.length > 0) {
-              await new Promise(resolve => setTimeout(resolve, 200))
+      
+      // Get created policy IDs from localStorage
+      const stored = localStorage.getItem('hyperinsure_created_policies')
+      const policyIds: string[] = stored ? JSON.parse(stored) : []
+      
+      // Also try default IDs
+      const allPolicyIds = [...new Set([...policyIds, "POL-001", "POL-002", "POL-003"])]
+      
+      const policies: Policy[] = []
+      
+      // Fetch policies sequentially to avoid CORS rate limiting
+      for (const policyId of allPolicyIds) {
+        try {
+          // Add small delay between requests to avoid rate limiting
+          if (policies.length > 0) {
+            await new Promise(resolve => setTimeout(resolve, 200))
+          }
+          
+          const policyData = await contractInteractions.getPolicyV2(policyId)
+          if (policyData && (policyData.active?.value === true || policyData.active === true)) {
+            const delayThreshold = parseInt(
+              policyData["delay-threshold"]?.value?.toString() || 
+              policyData["delay-threshold"]?.toString() || 
+              "35"
+            )
+            const premiumPercentage = parseInt(
+              policyData["premium-percentage"]?.value?.toString() || 
+              policyData["premium-percentage"]?.toString() || 
+              "200"
+            )
+            const protocolFee = parseInt(
+              policyData["protocol-fee"]?.value?.toString() || 
+              policyData["protocol-fee"]?.toString() || 
+              "100"
+            )
+            const payoutPerIncident = parseInt(
+              policyData["payout-per-incident"]?.value?.toString() || 
+              policyData["payout-per-incident"]?.toString() || 
+              "500000000"
+            ) / 1000000 // Convert from microSTX to STX
+            
+            const name = policyData.name?.value || policyData.name || policyId
+            const description = policyData.description?.value || policyData.description || "Insurance policy"
+            
+            // Determine icon based on premium rate
+            let icon = Zap
+            let popular = false
+            if (premiumPercentage >= 300) {
+              icon = Sparkles
+              popular = true
+            } else if (premiumPercentage >= 250) {
+              icon = Crown
             }
             
-            const policyData = await contractInteractions.getPolicyV2(policyId)
-            if (policyData && (policyData.active?.value === true || policyData.active === true)) {
-              const delayThreshold = parseInt(
-                policyData["delay-threshold"]?.value?.toString() || 
-                policyData["delay-threshold"]?.toString() || 
-                "35"
-              )
-              const premiumPercentage = parseInt(
-                policyData["premium-percentage"]?.value?.toString() || 
-                policyData["premium-percentage"]?.toString() || 
-                "200"
-              )
-              const protocolFee = parseInt(
-                policyData["protocol-fee"]?.value?.toString() || 
-                policyData["protocol-fee"]?.toString() || 
-                "100"
-              )
-              const payoutPerIncident = parseInt(
-                policyData["payout-per-incident"]?.value?.toString() || 
-                policyData["payout-per-incident"]?.toString() || 
-                "500000000"
-              ) / 1000000 // Convert from microSTX to STX
-              
-              const name = policyData.name?.value || policyData.name || policyId
-              const description = policyData.description?.value || policyData.description || "Insurance policy"
-              
-              // Determine icon based on premium rate
-              let icon = Zap
-              let popular = false
-              if (premiumPercentage >= 300) {
-                icon = Sparkles
-                popular = true
-              } else if (premiumPercentage >= 250) {
-                icon = Crown
-              }
-              
-              policies.push({
-                id: policyId,
-                name: name,
-                description: description,
-                icon: icon,
-                delayThreshold: delayThreshold,
-                premiumPercentage: premiumPercentage,
-                protocolFee: protocolFee,
-                payoutPerIncident: payoutPerIncident,
-                popular: popular,
-                features: [
-                  `${delayThreshold} block delay threshold`,
-                  `${(premiumPercentage / 100).toFixed(1)}% premium rate`,
-                  `${payoutPerIncident} STX payout`,
-                ]
-              })
-              
-              console.log(`✅ Loaded policy ${policyId}`)
-            }
-          } catch (error) {
-            console.log(`Policy ${policyId} not found or inactive`)
+            policies.push({
+              id: policyId,
+              name: name,
+              description: description,
+              icon: icon,
+              delayThreshold: delayThreshold,
+              premiumPercentage: premiumPercentage,
+              protocolFee: protocolFee,
+              payoutPerIncident: payoutPerIncident,
+              popular: popular,
+              features: [
+                `${delayThreshold} block delay threshold`,
+                `${(premiumPercentage / 100).toFixed(1)}% premium rate`,
+                `${payoutPerIncident} STX payout`,
+              ]
+            })
+            
+            console.log(`✅ Loaded policy ${policyId}`)
           }
+        } catch (error) {
+          console.log(`⚠️ Policy ${policyId} not found or inactive`)
         }
-        
-        if (policies.length > 0) {
-          setAvailablePolicies(policies)
-          console.log(`✅ Loaded ${policies.length} active policies from contract`)
-        } else {
-          console.log("No active policies found, using defaults")
-          setAvailablePolicies(defaultPolicies)
-        }
-      } catch (error) {
-        console.error("Error fetching policies:", error)
-        setAvailablePolicies(defaultPolicies)
-      } finally {
-        setLoadingPolicies(false)
       }
+      
+      if (policies.length > 0) {
+        setAvailablePolicies(policies)
+        console.log(`✅ Loaded ${policies.length} active policies from contract`)
+      } else {
+        console.log("⚠️ No active policies found in contract, using defaults")
+        setAvailablePolicies(defaultPolicies)
+      }
+      
+      setLoadingPolicies(false)
     }
     
     fetchPolicies()
