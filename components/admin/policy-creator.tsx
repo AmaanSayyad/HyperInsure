@@ -49,6 +49,41 @@ export function PolicyCreator() {
     payoutPerIncident: 500, // Default 500 STX (in microSTX: 500000000)
   })
   const [isLoading, setIsLoading] = useState(false)
+  const [isQuickSetup, setIsQuickSetup] = useState(false)
+  const [quickSetupProgress, setQuickSetupProgress] = useState(0)
+  const [quickSetupStatus, setQuickSetupStatus] = useState<string>("")
+  const [showManualForm, setShowManualForm] = useState(false)
+
+  // Default policies for quick setup
+  const defaultPolicies = [
+    {
+      policyId: "POL-001",
+      policyName: "Starter",
+      policyDescription: "Perfect for casual transactions with standard delay protection",
+      delayThreshold: 35,
+      premiumPercentage: 200,
+      protocolFee: 100,
+      payoutPerIncident: 500,
+    },
+    {
+      policyId: "POL-002",
+      policyName: "Professional",
+      policyDescription: "For active traders requiring faster confirmation guarantees",
+      delayThreshold: 30,
+      premiumPercentage: 300,
+      protocolFee: 150,
+      payoutPerIncident: 1000,
+    },
+    {
+      policyId: "POL-003",
+      policyName: "Enterprise",
+      policyDescription: "Maximum protection with extended delay threshold for high-value transactions",
+      delayThreshold: 40,
+      premiumPercentage: 250,
+      protocolFee: 120,
+      payoutPerIncident: 750,
+    },
+  ]
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
@@ -57,6 +92,150 @@ export function PolicyCreator() {
 
   const handleSliderChange = (name: string, value: number[]) => {
     setFormData((prev) => ({ ...prev, [name]: value[0] }))
+  }
+
+  // Quick Setup: Create all 3 default policies
+  const handleQuickSetup = async () => {
+    if (!isConnected) {
+      toast.error("Please connect your wallet first")
+      return
+    }
+
+    if (!network) {
+      toast.error("Network not initialized")
+      return
+    }
+
+    setIsQuickSetup(true)
+    setQuickSetupProgress(0)
+    setQuickSetupStatus("Starting quick setup...")
+
+    try {
+      // Verify user is admin
+      const contractInteractions = new ContractInteractions(network, userSession || null)
+      const adminAddress = await contractInteractions.getAdminV2()
+      const userAddress = userSession?.loadUserData()?.profile?.stxAddress?.testnet || userSession?.loadUserData()?.profile?.stxAddress?.mainnet
+      
+      if (!adminAddress) {
+        toast.error("Unable to verify admin address")
+        setIsQuickSetup(false)
+        return
+      }
+
+      if (userAddress !== adminAddress) {
+        toast.error("Unauthorized", {
+          description: `Only the contract admin can create policies.`,
+          duration: 8000,
+        })
+        setIsQuickSetup(false)
+        return
+      }
+
+      // Create each policy sequentially
+      for (let i = 0; i < defaultPolicies.length; i++) {
+        const policy = defaultPolicies[i]
+        setQuickSetupProgress(i + 1)
+        setQuickSetupStatus(`Creating ${policy.policyName} (${policy.policyId})...`)
+
+        // Check if policy already exists
+        try {
+          const existingPolicy = await contractInteractions.getPolicyV2(policy.policyId)
+          if (existingPolicy) {
+            toast.info(`Policy ${policy.policyId} already exists, skipping...`)
+            continue
+          }
+        } catch (error) {
+          // Policy doesn't exist, continue with creation
+        }
+
+        // Create the policy
+        await createPolicy(policy)
+        
+        // Wait a bit before creating next policy
+        if (i < defaultPolicies.length - 1) {
+          setQuickSetupStatus(`Waiting for confirmation...`)
+          await new Promise(resolve => setTimeout(resolve, 3000))
+        }
+      }
+
+      setQuickSetupStatus("All policies created successfully!")
+      toast.success("Quick Setup Complete!", {
+        description: "All 3 default policies have been created.",
+        duration: 5000,
+      })
+      
+      setTimeout(() => {
+        setIsQuickSetup(false)
+        setQuickSetupProgress(0)
+        setQuickSetupStatus("")
+      }, 3000)
+
+    } catch (error) {
+      console.error('Quick setup error:', error)
+      toast.error("Quick setup failed", {
+        description: error instanceof Error ? error.message : "Please try again",
+      })
+      setIsQuickSetup(false)
+      setQuickSetupProgress(0)
+      setQuickSetupStatus("")
+    }
+  }
+
+  // Helper function to create a single policy
+  const createPolicy = async (policy: typeof defaultPolicies[0]) => {
+    return new Promise<void>((resolve, reject) => {
+      const contractAddress = CONTRACT_ADDRESSES.HYPERINSURE_CORE_V2 || CONTRACT_ADDRESSES.HYPERINSURE_CORE
+      if (!contractAddress) {
+        reject(new Error("Contract address not configured"))
+        return
+      }
+
+      const { address, name } = parseContractId(contractAddress)
+      const payoutMicroSTX = policy.payoutPerIncident * 1000000
+
+      openContractCall({
+        contractAddress: address,
+        contractName: name,
+        functionName: 'create-policy',
+        functionArgs: [
+          stringAsciiCV(policy.policyId),
+          stringAsciiCV(policy.policyName),
+          stringUtf8CV(policy.policyDescription),
+          uintCV(policy.delayThreshold),
+          uintCV(policy.premiumPercentage),
+          uintCV(policy.protocolFee),
+          uintCV(payoutMicroSTX),
+        ],
+        network: {
+          url: 'https://api.testnet.hiro.so',
+          chainId: 0x80000000,
+        } as any,
+        anchorMode: AnchorMode.Any,
+        postConditionMode: PostConditionMode.Allow,
+        onFinish: (data) => {
+          // Track the created policy ID
+          try {
+            const stored = localStorage.getItem('hyperinsure_created_policies')
+            const policyIds: string[] = stored ? JSON.parse(stored) : []
+            if (!policyIds.includes(policy.policyId)) {
+              policyIds.push(policy.policyId)
+              localStorage.setItem('hyperinsure_created_policies', JSON.stringify(policyIds))
+            }
+          } catch (error) {
+            console.error("Error saving policy ID:", error)
+          }
+
+          toast.success(`${policy.policyName} created!`, {
+            description: `Transaction: ${data.txId.slice(0, 8)}...`,
+            duration: 3000,
+          })
+          resolve()
+        },
+        onCancel: () => {
+          reject(new Error("Transaction cancelled"))
+        },
+      })
+    })
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -337,19 +516,68 @@ export function PolicyCreator() {
                 <div className="p-2 rounded-lg bg-blue-500/20 flex-shrink-0">
                   <Info className="w-5 h-5 text-blue-400" />
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-3 flex-1">
                   <p className="text-sm font-semibold text-blue-300">
                     📋 First-Time Setup Instructions
                   </p>
                   <div className="text-xs text-blue-200/80 space-y-1">
-                    <p>1. Create policies with IDs: <span className="font-mono font-bold">POL-001</span>, <span className="font-mono font-bold">POL-002</span>, <span className="font-mono font-bold">POL-003</span></p>
-                    <p>2. Wait for each transaction to confirm before creating the next policy</p>
-                    <p>3. After all policies are created, users can purchase them from the Purchase page</p>
-                    <p className="pt-2 text-blue-300 font-medium">⚠️ Users will see "Policy Not Found" errors if these policies don't exist in the contract</p>
+                    <p>Use Quick Setup to automatically create all 3 default policies:</p>
+                    <p>• <span className="font-mono font-bold">POL-001</span> - Starter (35 blocks, 2% premium, 500 STX payout)</p>
+                    <p>• <span className="font-mono font-bold">POL-002</span> - Professional (30 blocks, 3% premium, 1000 STX payout)</p>
+                    <p>• <span className="font-mono font-bold">POL-003</span> - Enterprise (40 blocks, 2.5% premium, 750 STX payout)</p>
                   </div>
+                  
+                  {/* Quick Setup Button */}
+                  <Button
+                    type="button"
+                    onClick={handleQuickSetup}
+                    disabled={!isConnected || isQuickSetup || isLoading}
+                    className="w-full mt-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold py-3 rounded-xl shadow-lg shadow-blue-500/30 hover:shadow-blue-500/40 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isQuickSetup ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        {quickSetupStatus} ({quickSetupProgress}/3)
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="mr-2 h-4 w-4" />
+                        Quick Setup - Create All 3 Policies
+                      </>
+                    )}
+                  </Button>
+                  
+                  {isQuickSetup && (
+                    <div className="mt-3 space-y-2">
+                      <div className="flex justify-between text-xs text-blue-200">
+                        <span>Progress</span>
+                        <span>{quickSetupProgress}/3 policies</span>
+                      </div>
+                      <div className="w-full bg-blue-900/30 rounded-full h-2 overflow-hidden">
+                        <div 
+                          className="bg-gradient-to-r from-blue-400 to-blue-500 h-full transition-all duration-500 rounded-full"
+                          style={{ width: `${(quickSetupProgress / 3) * 100}%` }}
+                        />
+                      </div>
+                    </div>
+                  )}
+                  
+                  <p className="text-xs text-blue-200/60 mt-2">
+                    Or <button 
+                      type="button"
+                      onClick={() => setShowManualForm(!showManualForm)}
+                      className="text-blue-300 hover:text-blue-200 underline font-medium"
+                    >
+                      {showManualForm ? "hide" : "show"} manual form
+                    </button> to create custom policies
+                  </p>
                 </div>
               </div>
             </div>
+            
+            {/* Manual Form - Collapsible */}
+            {showManualForm && (
+              <>
             
             {/* Basic Information Section */}
             <div className="space-y-6">
@@ -548,7 +776,9 @@ export function PolicyCreator() {
                 </div>
               </div>
             </div>
+            )}
           </CardContent>
+          {showManualForm && (
           <CardFooter className="relative z-10 pt-6">
             <Button 
               type="submit" 
@@ -568,6 +798,7 @@ export function PolicyCreator() {
               )}
             </Button>
           </CardFooter>
+          )}
         </form>
       </Card>
     </div>
