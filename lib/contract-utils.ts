@@ -388,22 +388,26 @@ export class ContractInteractions {
         return null;
       }
 
-      // Parse tuple result - handle both optional and direct tuple
+      // Handle optional/some wrapper
+      let tupleValue = result;
       if (result.type === 'optional' || result.type === 'some') {
-        // Extract the value from optional
-        const innerValue = (result as any).value;
-        if (innerValue && innerValue.type === 'tuple') {
-          const json = cvToJSON(innerValue);
-          if (json && json.type === 'tuple' && json.value) {
-            return json.value;
-          }
-        }
+        tupleValue = (result as any).value;
       }
       
-      // Try direct tuple parsing
-      const json = cvToJSON(result);
-      if (json && json.type === 'tuple' && json.value) {
-        return json.value;
+      // Now extract tuple data directly without cvToJSON
+      if (tupleValue && tupleValue.type === 'tuple' && tupleValue.data) {
+        const data = tupleValue.data;
+        return {
+          'name': data.name?.data || data.name,
+          'description': data.description?.data || data.description,
+          'delay-threshold': data['delay-threshold']?.value || data['delay-threshold'],
+          'premium-percentage': data['premium-percentage']?.value || data['premium-percentage'],
+          'protocol-fee': data['protocol-fee']?.value || data['protocol-fee'],
+          'payout-per-incident': data['payout-per-incident']?.value || data['payout-per-incident'],
+          'active': data.active?.value !== undefined ? data.active.value : data.active,
+          'created-at': data['created-at']?.value || data['created-at'],
+          'created-by': data['created-by']?.data || data['created-by'],
+        };
       }
       
       return null;
@@ -427,22 +431,25 @@ export class ContractInteractions {
         return null;
       }
 
-      // Parse tuple result - handle both optional and direct tuple
+      // Handle optional/some wrapper
+      let tupleValue = result;
       if (result.type === 'optional' || result.type === 'some') {
-        // Extract the value from optional
-        const innerValue = (result as any).value;
-        if (innerValue && innerValue.type === 'tuple') {
-          const json = cvToJSON(innerValue);
-          if (json && json.type === 'tuple' && json.value) {
-            return json.value;
-          }
-        }
+        tupleValue = (result as any).value;
       }
       
-      // Try direct tuple parsing
-      const json = cvToJSON(result);
-      if (json && json.type === 'tuple' && json.value) {
-        return json.value;
+      // Now extract tuple data directly without cvToJSON
+      if (tupleValue && tupleValue.type === 'tuple' && tupleValue.data) {
+        const data = tupleValue.data;
+        return {
+          'policy-id': data['policy-id']?.data || data['policy-id'],
+          'purchaser': data.purchaser?.data || data.purchaser,
+          'stx-amount': data['stx-amount']?.value || data['stx-amount'],
+          'premium-paid': data['premium-paid']?.value || data['premium-paid'],
+          'fee-paid': data['fee-paid']?.value || data['fee-paid'],
+          'active': data.active?.value !== undefined ? data.active.value : data.active,
+          'created-at': data['created-at']?.value || data['created-at'],
+          'expiry': data.expiry?.value || data.expiry,
+        };
       }
       
       return null;
