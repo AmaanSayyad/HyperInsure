@@ -11,7 +11,7 @@ import { useStacks } from "@/lib/stacks-provider"
 import { ContractInteractions, formatSTX, parseSTX } from "@/lib/contract-utils"
 import { APP_CONFIG, CONTRACT_ADDRESSES, parseContractId } from "@/lib/stacks-config"
 import { openContractCall } from "@stacks/connect"
-import { uintCV, stringAsciiCV, AnchorMode, PostConditionMode } from "@stacks/transactions"
+import { uintCV, stringAsciiCV, AnchorMode, PostConditionMode, makeStandardSTXPostCondition, FungibleConditionCode } from "@stacks/transactions"
 
 interface Policy {
   id: string;
@@ -255,24 +255,114 @@ export function PolicyPurchase() {
       // Determine which contract we're using and call appropriate function
       const isCoreV2 = !!CONTRACT_ADDRESSES.HYPERINSURE_CORE_V2
       
-      // Generate purchase ID for HYPERINSURE_CORE_V2
-      const purchaseId = generatePurchaseId()
+      // Generate unique purchase ID and verify it doesn't exist
+      let purchaseId = generatePurchaseId()
       
-      // Optional: Try to verify policy exists (non-blocking, just for user info)
+      // If using V2, check if purchase ID already exists and regenerate if needed
+      if (isCoreV2 && contractInteractions) {
+        let attempts = 0
+        while (attempts < 5) {
+          try {
+            const existingPurchase = await contractInteractions.getPurchaseV2(purchaseId)
+            if (!existingPurchase) {
+              // Purchase ID is unique
+              break
+            }
+            // Purchase ID exists, generate a new one
+            console.warn(`Purchase ID ${purchaseId} already exists, generating new one...`)
+            purchaseId = generatePurchaseId()
+            attempts++
+          } catch (error) {
+            // Error checking purchase - assume it doesn't exist
+            break
+          }
+        }
+        
+        if (attempts >= 5) {
+          toast.error("Failed to generate unique purchase ID", {
+            description: "Please try again in a moment.",
+          })
+          setIsLoading(false)
+          return
+        }
+      }
+      
+      console.log(`📝 Purchase details:`, {
+        purchaseId,
+        policyId: selectedPolicy.id,
+        coverageAmount: `${stxAmount} STX (${coverageAmount} microSTX)`,
+        premium: `${(coverageAmount * selectedPolicy.premiumPercentage) / 10000} microSTX`,
+        fee: `${(coverageAmount * selectedPolicy.protocolFee) / 10000} microSTX`,
+        totalCost: `${coverageAmount + (coverageAmount * selectedPolicy.premiumPercentage) / 10000 + (coverageAmount * selectedPolicy.protocolFee) / 10000} microSTX`,
+      })
+      
+      // Calculate total cost for post-condition
+      const premium = Math.floor((coverageAmount * selectedPolicy.premiumPercentage) / 10000)
+      const fee = Math.floor((coverageAmount * selectedPolicy.protocolFee) / 10000)
+      const totalCost = premium + fee
+      
+      console.log(`💰 Payment breakdown:`, {
+        premium: `${premium} microSTX`,
+        fee: `${fee} microSTX`,
+        totalCost: `${totalCost} microSTX`,
+      })
+      
+      // Get user address for post-condition
+      const userAddress = userSession?.loadUserData()?.profile?.stxAddress?.testnet || 
+                         userSession?.loadUserData()?.profile?.stxAddress?.mainnet
+      
+      if (!userAddress) {
+        toast.error("Could not get wallet address")
+        setIsLoading(false)
+        return
+      }
+      
+      // Create post-condition: user must transfer at least totalCost STX
+      const postConditions = [
+        makeStandardSTXPostCondition(
+          userAddress,
+          FungibleConditionCode.LessEqual,
+          totalCost
+        )
+      ]
+      
+      // CRITICAL: Verify policy exists and is active before attempting purchase
       if (isCoreV2 && contractInteractions) {
         try {
           const policyData = await contractInteractions.getPolicyV2(selectedPolicy.id)
           if (!policyData) {
-            console.warn(`Policy ${selectedPolicy.id} not found in HYPERINSURE_CORE_V2, but proceeding with purchase attempt`)
-          } else {
-            const isActive = policyData.active?.value === true || policyData.active === true
-            if (!isActive) {
-              console.warn(`Policy ${selectedPolicy.id} exists but is inactive`)
-            }
+            toast.error("Policy Not Found", {
+              description: `Policy "${selectedPolicy.id}" does not exist in the contract. Please ensure the admin has created this policy first.`,
+              duration: 8000,
+            })
+            setIsLoading(false)
+            return
           }
+          
+          const isActive = policyData.active?.value === true || policyData.active === true
+          if (!isActive) {
+            toast.error("Policy Inactive", {
+              description: `Policy "${selectedPolicy.id}" exists but is not currently active. Please contact the admin.`,
+              duration: 8000,
+            })
+            setIsLoading(false)
+            return
+          }
+          
+          console.log(`✅ Policy ${selectedPolicy.id} verified:`, {
+            name: policyData.name?.value || policyData.name,
+            active: isActive,
+            delayThreshold: policyData["delay-threshold"]?.value || policyData["delay-threshold"],
+            premiumPercentage: policyData["premium-percentage"]?.value || policyData["premium-percentage"],
+          })
         } catch (error) {
-          // Non-blocking - just log the error and proceed
-          console.warn("Could not verify policy existence, proceeding with purchase:", error)
+          console.error("Error verifying policy:", error)
+          toast.error("Policy Verification Failed", {
+            description: "Could not verify policy status. Please try again or contact support.",
+            duration: 8000,
+          })
+          setIsLoading(false)
+          return
         }
       }
       
@@ -294,7 +384,8 @@ export function PolicyPurchase() {
           chainId: 0x80000000,
         } as any,
         anchorMode: AnchorMode.Any,
-        postConditionMode: PostConditionMode.Allow,
+        postConditionMode: PostConditionMode.Deny, // Changed to Deny - only allow specified post-conditions
+        postConditions: postConditions, // Add post-conditions
         onFinish: (data) => {
           const explorerUrl = `https://explorer.hiro.so/txid/${data.txId}?chain=${APP_CONFIG.NETWORK}`
           const copyTxId = () => {
@@ -389,27 +480,44 @@ export function PolicyPurchase() {
     } catch (error) {
       console.error('Error purchasing policy:', error)
       const errorMessage = error instanceof Error ? error.message : "Unknown error"
+      const errorString = JSON.stringify(error)
+      
+      console.error('Full error details:', {
+        message: errorMessage,
+        error: error,
+        errorString: errorString,
+      })
       
       // Provide more helpful error messages
       let userMessage = "Failed to purchase policy"
       let description = errorMessage
       
-      if (errorMessage.includes("ERR_POLICY_NOT_FOUND") || errorMessage.includes("policy not found")) {
+      // Check for specific error codes in the error message
+      if (errorMessage.includes("(err u3)") || errorMessage.includes("ERR_POLICY_NOT_FOUND")) {
         userMessage = "Policy Not Found"
         description = `The policy "${selectedPolicy?.id}" does not exist in the contract. Please ensure the admin has created this policy first.`
-      } else if (errorMessage.includes("ERR_POLICY_INACTIVE") || errorMessage.includes("inactive")) {
+      } else if (errorMessage.includes("(err u11)") || errorMessage.includes("ERR_POLICY_INACTIVE")) {
         userMessage = "Policy Inactive"
-        description = `The policy "${selectedPolicy?.id}" is not currently active.`
-      } else if (errorMessage.includes("ERR_INSUFFICIENT_FUNDS") || errorMessage.includes("insufficient")) {
+        description = `The policy "${selectedPolicy?.id}" is not currently active. Please contact the admin.`
+      } else if (errorMessage.includes("(err u5)") || errorMessage.includes("ERR_INSUFFICIENT_FUNDS") || errorMessage.includes("insufficient")) {
         userMessage = "Insufficient Funds"
-        description = "You don't have enough STX to cover the premium and fees."
-      } else if (errorMessage.includes("ERR_PURCHASE_EXISTS")) {
+        description = "You don't have enough STX to cover the coverage amount, premium, and fees. Please check your wallet balance."
+      } else if (errorMessage.includes("(err u9)") || errorMessage.includes("ERR_PURCHASE_EXISTS")) {
         userMessage = "Purchase ID Exists"
-        description = "This purchase ID already exists. Please try again."
+        description = "This purchase ID already exists. Please try again to generate a new ID."
+      } else if (errorMessage.includes("aborted") || errorMessage.includes("violated the rules")) {
+        userMessage = "Transaction Aborted"
+        description = "The transaction was aborted by the smart contract. This could be due to: insufficient funds, policy not found, or policy inactive. Check the console for error code details."
+      } else if (errorMessage.includes("rejected") || errorMessage.includes("User rejected")) {
+        userMessage = "Transaction Rejected"
+        description = "You cancelled the transaction."
+        setIsLoading(false)
+        return // Don't show error toast for user cancellation
       }
       
       toast.error(userMessage, {
-        description: description
+        description: description,
+        duration: 10000,
       })
       setIsLoading(false)
     }
@@ -462,12 +570,22 @@ export function PolicyPurchase() {
           <span className="ml-3 text-muted-foreground">Loading available policies...</span>
         </div>
       ) : availablePolicies.length === 0 ? (
-        <div className="glass rounded-2xl p-8 border border-accent/30 text-center">
-          <Shield className="w-12 h-12 text-accent mx-auto mb-4" />
+        <div className="glass rounded-2xl p-8 border border-accent/30 text-center space-y-4">
+          <Shield className="w-12 h-12 text-accent mx-auto" />
           <h3 className="text-xl font-bold text-foreground mb-2">No Policies Available</h3>
-          <p className="text-muted-foreground">
-            No active insurance policies found. Please contact the admin to create policies.
+          <p className="text-muted-foreground max-w-md mx-auto">
+            No active insurance policies found in the contract. The admin needs to create policies first.
           </p>
+          <div className="mt-6 p-4 rounded-xl bg-blue-500/10 border border-blue-500/30 text-left max-w-lg mx-auto">
+            <p className="text-sm font-semibold text-blue-300 mb-2">📋 For Admins:</p>
+            <ol className="text-xs text-blue-200/80 space-y-1 list-decimal list-inside">
+              <li>Go to the Admin page</li>
+              <li>Navigate to the "Policies" tab</li>
+              <li>Create policies with IDs: POL-001, POL-002, POL-003</li>
+              <li>Wait for transactions to confirm</li>
+              <li>Policies will appear here automatically</li>
+            </ol>
+          </div>
         </div>
       ) : (
         <div className="grid md:grid-cols-3 gap-6">

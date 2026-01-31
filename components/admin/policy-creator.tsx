@@ -331,6 +331,26 @@ export function PolicyCreator() {
               </div>
             )}
             
+            {/* Important Notice for First-Time Setup */}
+            <div className="p-5 rounded-2xl glass border-2 border-blue-500/30 bg-gradient-to-br from-blue-500/10 via-blue-500/5 to-transparent backdrop-blur-sm">
+              <div className="flex items-start gap-3">
+                <div className="p-2 rounded-lg bg-blue-500/20 flex-shrink-0">
+                  <Info className="w-5 h-5 text-blue-400" />
+                </div>
+                <div className="space-y-2">
+                  <p className="text-sm font-semibold text-blue-300">
+                    📋 First-Time Setup Instructions
+                  </p>
+                  <div className="text-xs text-blue-200/80 space-y-1">
+                    <p>1. Create policies with IDs: <span className="font-mono font-bold">POL-001</span>, <span className="font-mono font-bold">POL-002</span>, <span className="font-mono font-bold">POL-003</span></p>
+                    <p>2. Wait for each transaction to confirm before creating the next policy</p>
+                    <p>3. After all policies are created, users can purchase them from the Purchase page</p>
+                    <p className="pt-2 text-blue-300 font-medium">⚠️ Users will see "Policy Not Found" errors if these policies don't exist in the contract</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
             {/* Basic Information Section */}
             <div className="space-y-6">
               <div className="flex items-center gap-2 pb-2 border-b border-white/10">
