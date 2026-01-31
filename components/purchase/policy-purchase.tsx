@@ -26,7 +26,8 @@ interface Policy {
   features: string[];
 }
 
-const availablePolicies: Policy[] = [
+// Default policies - will be replaced by contract data
+const defaultPolicies: Policy[] = [
   {
     id: "POL-001",
     name: "Starter",
@@ -96,6 +97,8 @@ export function PolicyPurchase() {
   const [isLoading, setIsLoading] = useState(false)
   const [treasuryBalance, setTreasuryBalance] = useState(0)
   const [contractInteractions, setContractInteractions] = useState<ContractInteractions | null>(null)
+  const [availablePolicies, setAvailablePolicies] = useState<Policy[]>(defaultPolicies)
+  const [loadingPolicies, setLoadingPolicies] = useState(false)
 
   useEffect(() => {
     if (network) {
@@ -115,6 +118,100 @@ export function PolicyPurchase() {
       }
     }
     fetchTreasuryBalance()
+  }, [contractInteractions])
+
+  // Fetch available policies from contract
+  useEffect(() => {
+    const fetchPolicies = async () => {
+      if (!contractInteractions) return
+      
+      setLoadingPolicies(true)
+      try {
+        // Get created policy IDs from localStorage
+        const stored = localStorage.getItem('hyperinsure_created_policies')
+        const policyIds: string[] = stored ? JSON.parse(stored) : []
+        
+        // Also try default IDs
+        const allPolicyIds = [...new Set([...policyIds, "POL-001", "POL-002", "POL-003"])]
+        
+        const policies: Policy[] = []
+        
+        for (const policyId of allPolicyIds) {
+          try {
+            const policyData = await contractInteractions.getPolicyV2(policyId)
+            if (policyData && (policyData.active?.value === true || policyData.active === true)) {
+              const delayThreshold = parseInt(
+                policyData["delay-threshold"]?.value?.toString() || 
+                policyData["delay-threshold"]?.toString() || 
+                "35"
+              )
+              const premiumPercentage = parseInt(
+                policyData["premium-percentage"]?.value?.toString() || 
+                policyData["premium-percentage"]?.toString() || 
+                "200"
+              )
+              const protocolFee = parseInt(
+                policyData["protocol-fee"]?.value?.toString() || 
+                policyData["protocol-fee"]?.toString() || 
+                "100"
+              )
+              const payoutPerIncident = parseInt(
+                policyData["payout-per-incident"]?.value?.toString() || 
+                policyData["payout-per-incident"]?.toString() || 
+                "500000000"
+              ) / 1000000 // Convert from microSTX to STX
+              
+              const name = policyData.name?.value || policyData.name || policyId
+              const description = policyData.description?.value || policyData.description || "Insurance policy"
+              
+              // Determine icon based on premium rate
+              let icon = Zap
+              let popular = false
+              if (premiumPercentage >= 300) {
+                icon = Sparkles
+                popular = true
+              } else if (premiumPercentage >= 250) {
+                icon = Crown
+              }
+              
+              policies.push({
+                id: policyId,
+                name: name,
+                description: description,
+                icon: icon,
+                delayThreshold: delayThreshold,
+                premiumPercentage: premiumPercentage,
+                protocolFee: protocolFee,
+                payoutPerIncident: payoutPerIncident,
+                popular: popular,
+                features: [
+                  `${delayThreshold} block delay threshold`,
+                  `${(premiumPercentage / 100).toFixed(1)}% premium rate`,
+                  `${payoutPerIncident} STX payout`,
+                ]
+              })
+            }
+          } catch (error) {
+            console.log(`Policy ${policyId} not found or inactive`)
+          }
+        }
+        
+        if (policies.length > 0) {
+          setAvailablePolicies(policies)
+          console.log(`Loaded ${policies.length} active policies from contract`)
+        } else {
+          console.log("No active policies found, using defaults")
+          setAvailablePolicies(defaultPolicies)
+        }
+      } catch (error) {
+        console.error("Error fetching policies:", error)
+        setAvailablePolicies(defaultPolicies)
+      } finally {
+        setLoadingPolicies(false)
+      }
+    }
+    
+    fetchPolicies()
   }, [contractInteractions])
 
   const handlePolicySelect = (policy: Policy) => {
@@ -359,8 +456,22 @@ export function PolicyPurchase() {
       )}
 
       {/* Policy Cards */}
-      <div className="grid md:grid-cols-3 gap-6">
-        {availablePolicies.map((policy) => {
+      {loadingPolicies ? (
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="w-8 h-8 text-primary animate-spin" />
+          <span className="ml-3 text-muted-foreground">Loading available policies...</span>
+        </div>
+      ) : availablePolicies.length === 0 ? (
+        <div className="glass rounded-2xl p-8 border border-accent/30 text-center">
+          <Shield className="w-12 h-12 text-accent mx-auto mb-4" />
+          <h3 className="text-xl font-bold text-foreground mb-2">No Policies Available</h3>
+          <p className="text-muted-foreground">
+            No active insurance policies found. Please contact the admin to create policies.
+          </p>
+        </div>
+      ) : (
+        <div className="grid md:grid-cols-3 gap-6">
+          {availablePolicies.map((policy) => {
           const Icon = policy.icon
           const isSelected = selectedPolicy?.id === policy.id
           
@@ -440,7 +551,8 @@ export function PolicyPurchase() {
             </div>
           )
         })}
-      </div>
+        </div>
+      )}
 
       {/* Purchase Form */}
       {selectedPolicy && (
