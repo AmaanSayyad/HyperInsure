@@ -118,8 +118,15 @@ export function ClaimForm() {
 
         const purchases: UserPurchase[] = []
 
-        for (const purchaseId of purchaseIds) {
+        for (let i = 0; i < purchaseIds.length; i++) {
+          const purchaseId = purchaseIds[i]
+          
           try {
+            // Add delay between requests to avoid CORS rate limiting (especially on Vercel)
+            if (i > 0) {
+              await new Promise(resolve => setTimeout(resolve, 500))
+            }
+            
             const purchaseData = await contractInteractions.getPurchaseV2(purchaseId)
             
             if (!purchaseData || purchaseData === null) {
@@ -149,6 +156,9 @@ export function ClaimForm() {
               console.log(`Fetching policy ${policyId} for purchase ${purchaseId}`)
               
               try {
+                // Add small delay before policy fetch
+                await new Promise(resolve => setTimeout(resolve, 300))
+                
                 const policyData = await contractInteractions.getPolicyV2(policyId)
                 console.log(`Policy ${policyId} data:`, policyData)
                 
@@ -218,7 +228,12 @@ export function ClaimForm() {
             } else {
               console.log(`Purchase ${purchaseId} belongs to different user, skipping`)
             }
-          } catch (error) {
+          } catch (error: any) {
+            // Check if it's a CORS/network error
+            if (error?.message?.includes('Network error') || error?.message?.includes('CORS')) {
+              console.warn(`CORS/Network error for purchase ${purchaseId}, stopping fetch to avoid rate limit`)
+              break // Stop fetching more to avoid more CORS errors
+            }
             console.error(`Error fetching purchase ${purchaseId}:`, error)
           }
         }

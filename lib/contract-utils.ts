@@ -388,11 +388,24 @@ export class ContractInteractions {
         return null;
       }
 
-      // Parse tuple result
+      // Parse tuple result - handle both optional and direct tuple
+      if (result.type === 'optional' || result.type === 'some') {
+        // Extract the value from optional
+        const innerValue = (result as any).value;
+        if (innerValue && innerValue.type === 'tuple') {
+          const json = cvToJSON(innerValue);
+          if (json && json.type === 'tuple' && json.value) {
+            return json.value;
+          }
+        }
+      }
+      
+      // Try direct tuple parsing
       const json = cvToJSON(result);
-      if (json.type === 'tuple') {
+      if (json && json.type === 'tuple' && json.value) {
         return json.value;
       }
+      
       return null;
     } catch (error) {
       console.error('Error getting policy V2:', error);
@@ -414,11 +427,24 @@ export class ContractInteractions {
         return null;
       }
 
-      // Parse tuple result
+      // Parse tuple result - handle both optional and direct tuple
+      if (result.type === 'optional' || result.type === 'some') {
+        // Extract the value from optional
+        const innerValue = (result as any).value;
+        if (innerValue && innerValue.type === 'tuple') {
+          const json = cvToJSON(innerValue);
+          if (json && json.type === 'tuple' && json.value) {
+            return json.value;
+          }
+        }
+      }
+      
+      // Try direct tuple parsing
       const json = cvToJSON(result);
-      if (json.type === 'tuple') {
+      if (json && json.type === 'tuple' && json.value) {
         return json.value;
       }
+      
       return null;
     } catch (error) {
       console.error('Error getting purchase V2:', error);
