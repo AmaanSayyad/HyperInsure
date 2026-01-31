@@ -700,11 +700,11 @@ export function ClaimForm() {
                       setClaimResult(null)
                     }}
                     disabled={loading}
-                    className="w-full px-3 py-2 rounded-lg border border-white/10 bg-white/5 text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+                    className="w-full px-3 py-2 rounded-lg border border-white/10 bg-white/5 text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary [&>option]:text-black [&>option]:bg-white dark:[&>option]:text-white dark:[&>option]:bg-gray-900"
                   >
-                    <option value="">-- Select a purchase --</option>
+                    <option value="" className="text-black bg-white dark:text-white dark:bg-gray-900">-- Select a purchase --</option>
                     {userPurchases.map((purchase) => (
-                      <option key={purchase.purchaseId} value={purchase.purchaseId}>
+                      <option key={purchase.purchaseId} value={purchase.purchaseId} className="text-black bg-white dark:text-white dark:bg-gray-900">
                         {purchase.policyName} - {purchase.purchaseId} (Threshold: {purchase.delayThreshold} blocks)
                       </option>
                     ))}
