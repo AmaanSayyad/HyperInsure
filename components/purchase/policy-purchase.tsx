@@ -131,10 +131,12 @@ export function PolicyPurchase() {
       const stored = localStorage.getItem('hyperinsure_created_policies')
       const policyIds: string[] = stored ? JSON.parse(stored) : []
       
-      // Also try default IDs
-      const allPolicyIds = [...new Set([...policyIds, "POL-001", "POL-002", "POL-003"])]
+      // ONLY use POL-001, POL-002, POL-003
+      const allPolicyIds = ["POL-001", "POL-002", "POL-003"]
       
       const policies: Policy[] = []
+      
+      console.log(`🔍 Fetching ${allPolicyIds.length} policies...`)
       
       // Fetch policies sequentially to avoid CORS rate limiting
       for (const policyId of allPolicyIds) {
@@ -145,6 +147,8 @@ export function PolicyPurchase() {
           }
           
           const policyData = await contractInteractions.getPolicyV2(policyId)
+          console.log(`📋 Policy ${policyId} data:`, policyData)
+          
           if (policyData && (policyData.active?.value === true || policyData.active === true)) {
             const delayThreshold = parseInt(
               policyData["delay-threshold"]?.value?.toString() || 
@@ -197,16 +201,20 @@ export function PolicyPurchase() {
               ]
             })
             
-            console.log(`✅ Loaded policy ${policyId}`)
+            console.log(`✅ Loaded policy ${policyId}:`, { name, delayThreshold, premiumPercentage, payoutPerIncident })
+          } else {
+            console.log(`❌ Policy ${policyId} not active or not found`)
           }
         } catch (error) {
-          console.log(`⚠️ Policy ${policyId} not found or inactive`)
+          console.log(`❌ Error loading policy ${policyId}:`, error)
         }
       }
       
+      console.log(`📊 Total policies loaded: ${policies.length}`, policies)
+      
       if (policies.length > 0) {
         setAvailablePolicies(policies)
-        console.log(`✅ Loaded ${policies.length} active policies from contract`)
+        console.log(`✅ Successfully set ${policies.length} policies in state`)
       } else {
         console.log("⚠️ No active policies found in contract, using defaults")
         setAvailablePolicies(defaultPolicies)
@@ -333,40 +341,33 @@ export function PolicyPurchase() {
       // CRITICAL: Verify policy exists and is active before attempting purchase
       if (isCoreV2 && contractInteractions) {
         try {
+          console.log(`🔍 Verifying policy ${selectedPolicy.id}...`)
           const policyData = await contractInteractions.getPolicyV2(selectedPolicy.id)
+          
           if (!policyData) {
-            toast.error("Policy Not Found", {
-              description: `Policy "${selectedPolicy.id}" does not exist in the contract. Please ensure the admin has created this policy first.`,
-              duration: 8000,
+            console.warn(`⚠️ Policy ${selectedPolicy.id} not found during verification, but will try purchase anyway`)
+            // Don't block the purchase - let the contract decide
+          } else {
+            const isActive = policyData.active?.value === true || policyData.active === true
+            if (!isActive) {
+              toast.error("Policy Inactive", {
+                description: `Policy "${selectedPolicy.id}" exists but is not currently active. Please contact the admin.`,
+                duration: 8000,
+              })
+              setIsLoading(false)
+              return
+            }
+            
+            console.log(`✅ Policy ${selectedPolicy.id} verified:`, {
+              name: policyData.name?.value || policyData.name,
+              active: isActive,
+              delayThreshold: policyData["delay-threshold"]?.value || policyData["delay-threshold"],
+              premiumPercentage: policyData["premium-percentage"]?.value || policyData["premium-percentage"],
             })
-            setIsLoading(false)
-            return
           }
-          
-          const isActive = policyData.active?.value === true || policyData.active === true
-          if (!isActive) {
-            toast.error("Policy Inactive", {
-              description: `Policy "${selectedPolicy.id}" exists but is not currently active. Please contact the admin.`,
-              duration: 8000,
-            })
-            setIsLoading(false)
-            return
-          }
-          
-          console.log(`✅ Policy ${selectedPolicy.id} verified:`, {
-            name: policyData.name?.value || policyData.name,
-            active: isActive,
-            delayThreshold: policyData["delay-threshold"]?.value || policyData["delay-threshold"],
-            premiumPercentage: policyData["premium-percentage"]?.value || policyData["premium-percentage"],
-          })
         } catch (error) {
-          console.error("Error verifying policy:", error)
-          toast.error("Policy Verification Failed", {
-            description: "Could not verify policy status. Please try again or contact support.",
-            duration: 8000,
-          })
-          setIsLoading(false)
-          return
+          console.warn("⚠️ Error verifying policy (will try purchase anyway):", error)
+          // Don't block the purchase - let the contract decide
         }
       }
       
