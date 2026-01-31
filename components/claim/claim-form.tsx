@@ -121,6 +121,8 @@ export function ClaimForm() {
         for (const purchaseId of purchaseIds) {
           try {
             const purchaseData = await contractInteractions.getPurchaseV2(purchaseId)
+            console.log(`Purchase ${purchaseId} raw data:`, purchaseData)
+            
             if (purchaseData && purchaseData !== null) {
               // Extract purchaser address - handle both wrapped and unwrapped values
               let purchaser = purchaseData.purchaser?.value || purchaseData.purchaser
@@ -130,67 +132,86 @@ export function ClaimForm() {
                 purchaser = (purchaser as any).address || String(purchaser)
               }
               
-              console.log(`Purchase ${purchaseId} - Purchaser: ${purchaser}, User: ${userAddress}`)
+              // Convert both to strings for comparison
+              const purchaserStr = String(purchaser).trim()
+              const userAddressStr = String(userAddress).trim()
+              
+              console.log(`Purchase ${purchaseId} - Purchaser: "${purchaserStr}", User: "${userAddressStr}", Match: ${purchaserStr === userAddressStr}`)
               
               // Check if this purchase belongs to the current user
-              if (purchaser === userAddress || String(purchaser) === String(userAddress)) {
+              if (purchaserStr === userAddressStr) {
                 const policyId = purchaseData["policy-id"]?.value || purchaseData["policy-id"] || ""
-                const policyData = await contractInteractions.getPolicyV2(policyId)
+                console.log(`Fetching policy ${policyId} for purchase ${purchaseId}`)
                 
-                if (policyData) {
-                  const createdAt = parseInt(
-                    purchaseData["created-at"]?.value?.toString() || 
-                    purchaseData["created-at"]?.toString() || 
-                    "0"
-                  )
-                  const expiry = parseInt(
-                    purchaseData.expiry?.value?.toString() || 
-                    purchaseData.expiry?.toString() || 
-                    "0"
-                  )
+                try {
+                  const policyData = await contractInteractions.getPolicyV2(policyId)
+                  console.log(`Policy ${policyId} data:`, policyData)
                   
-                  // Check if purchase is active in contract
-                  const isActiveInContract = purchaseData.active?.value === true || purchaseData.active === true
-                  
-                  const blocksToMs = 600000
-                  const purchaseDate = new Date(Date.now() - (createdAt * blocksToMs))
-                  const expiryDate = new Date(Date.now() + ((expiry - createdAt) * blocksToMs))
-                  
-                  const now = Date.now()
-                  const isExpired = expiryDate.getTime() < now || !isActiveInContract
-                  
-                  console.log(`Purchase ${purchaseId} details:`, {
-                    policyId,
-                    policyName: policyData.name?.value || policyData.name,
-                    isActiveInContract,
-                    isExpired,
-                    status: isExpired ? "expired" : "active"
-                  })
-                  
-                  purchases.push({
-                    purchaseId,
-                    policyId,
-                    policyName: policyData.name?.value || policyData.name || policyId,
-                    delayThreshold: parseInt(
-                      policyData["delay-threshold"]?.value?.toString() || 
-                      policyData["delay-threshold"]?.toString() || 
-                      "35"
-                    ),
-                    coverageAmount: parseInt(
-                      purchaseData["stx-amount"]?.value?.toString() || 
-                      purchaseData["stx-amount"]?.toString() || 
+                  if (policyData) {
+                    const createdAt = parseInt(
+                      purchaseData["created-at"]?.value?.toString() || 
+                      purchaseData["created-at"]?.toString() || 
                       "0"
-                    ),
-                    premiumPaid: parseInt(
-                      purchaseData["premium-paid"]?.value?.toString() || 
-                      purchaseData["premium-paid"]?.toString() || 
+                    )
+                    const expiry = parseInt(
+                      purchaseData.expiry?.value?.toString() || 
+                      purchaseData.expiry?.toString() || 
                       "0"
-                    ),
-                    purchaseDate,
-                    expiryDate,
-                    status: isExpired ? "expired" : "active"
-                  })
+                    )
+                    
+                    // Check if purchase is active in contract
+                    const isActiveInContract = purchaseData.active?.value === true || purchaseData.active === true
+                    
+                    const blocksToMs = 600000
+                    const purchaseDate = new Date(Date.now() - (createdAt * blocksToMs))
+                    const expiryDate = new Date(Date.now() + ((expiry - createdAt) * blocksToMs))
+                    
+                    const now = Date.now()
+                    const isExpired = expiryDate.getTime() < now || !isActiveInContract
+                    
+                    console.log(`Purchase ${purchaseId} details:`, {
+                      policyId,
+                      policyName: policyData.name?.value || policyData.name,
+                      isActiveInContract,
+                      isExpired,
+                      expiryDate: expiryDate.toISOString(),
+                      now: new Date(now).toISOString(),
+                      status: isExpired ? "expired" : "active"
+                    })
+                    
+                    purchases.push({
+                      purchaseId,
+                      policyId,
+                      policyName: policyData.name?.value || policyData.name || policyId,
+                      delayThreshold: parseInt(
+                        policyData["delay-threshold"]?.value?.toString() || 
+                        policyData["delay-threshold"]?.toString() || 
+                        "35"
+                      ),
+                      coverageAmount: parseInt(
+                        purchaseData["stx-amount"]?.value?.toString() || 
+                        purchaseData["stx-amount"]?.toString() || 
+                        "0"
+                      ),
+                      premiumPaid: parseInt(
+                        purchaseData["premium-paid"]?.value?.toString() || 
+                        purchaseData["premium-paid"]?.toString() || 
+                        "0"
+                      ),
+                      purchaseDate,
+                      expiryDate,
+                      status: isExpired ? "expired" : "active"
+                    })
+                    
+                    console.log(`✅ Added purchase ${purchaseId} to list`)
+                  } else {
+                    console.warn(`Policy ${policyId} not found for purchase ${purchaseId}`)
+                  }
+                } catch (policyError) {
+                  console.error(`Error fetching policy ${policyId}:`, policyError)
                 }
+              } else {
+                console.log(`Purchase ${purchaseId} belongs to different user, skipping`)
               }
             }
           } catch (error) {
