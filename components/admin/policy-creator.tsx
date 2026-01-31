@@ -13,7 +13,7 @@ import { openContractCall } from "@stacks/connect"
 import { stringAsciiCV, stringUtf8CV, uintCV, AnchorMode, PostConditionMode } from "@stacks/transactions"
 import { CONTRACT_ADDRESSES, parseContractId, APP_CONFIG } from "@/lib/stacks-config"
 import { ContractInteractions } from "@/lib/contract-utils"
-import { Copy, ExternalLink, CheckCircle, Shield, Sparkles, Info, TrendingUp, DollarSign, Clock, FileText, Loader2 } from "lucide-react"
+import { Copy, ExternalLink, CheckCircle, Shield, Sparkles, Info, TrendingUp, DollarSign, Clock, FileText } from "lucide-react"
 
 export function PolicyCreator() {
   const { isConnected, userSession, network } = useStacks()
@@ -474,7 +474,6 @@ export function PolicyCreator() {
 
   return (
     <div className="w-full">
-      <form onSubmit={handleSubmit}>
       <Card className="glass border border-white/10 overflow-hidden rounded-3xl relative">
         {/* Enhanced Background Gradient */}
         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 pointer-events-none" />
@@ -800,8 +799,8 @@ export function PolicyCreator() {
             </Button>
           </CardFooter>
           )}
-        </Card>
         </form>
-      </div>
+      </Card>
+    </div>
   )
 }
