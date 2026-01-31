@@ -122,8 +122,18 @@ export function ClaimForm() {
           try {
             const purchaseData = await contractInteractions.getPurchaseV2(purchaseId)
             if (purchaseData && purchaseData !== null) {
-              const purchaser = purchaseData.purchaser?.value || purchaseData.purchaser
-              if (purchaser === userAddress) {
+              // Extract purchaser address - handle both wrapped and unwrapped values
+              let purchaser = purchaseData.purchaser?.value || purchaseData.purchaser
+              
+              // If purchaser is still an object, try to extract the address string
+              if (typeof purchaser === 'object' && purchaser !== null) {
+                purchaser = (purchaser as any).address || String(purchaser)
+              }
+              
+              console.log(`Purchase ${purchaseId} - Purchaser: ${purchaser}, User: ${userAddress}`)
+              
+              // Check if this purchase belongs to the current user
+              if (purchaser === userAddress || String(purchaser) === String(userAddress)) {
                 const policyId = purchaseData["policy-id"]?.value || purchaseData["policy-id"] || ""
                 const policyData = await contractInteractions.getPolicyV2(policyId)
                 
@@ -139,12 +149,23 @@ export function ClaimForm() {
                     "0"
                   )
                   
+                  // Check if purchase is active in contract
+                  const isActiveInContract = purchaseData.active?.value === true || purchaseData.active === true
+                  
                   const blocksToMs = 600000
                   const purchaseDate = new Date(Date.now() - (createdAt * blocksToMs))
                   const expiryDate = new Date(Date.now() + ((expiry - createdAt) * blocksToMs))
                   
                   const now = Date.now()
-                  const isExpired = expiryDate.getTime() < now
+                  const isExpired = expiryDate.getTime() < now || !isActiveInContract
+                  
+                  console.log(`Purchase ${purchaseId} details:`, {
+                    policyId,
+                    policyName: policyData.name?.value || policyData.name,
+                    isActiveInContract,
+                    isExpired,
+                    status: isExpired ? "expired" : "active"
+                  })
                   
                   purchases.push({
                     purchaseId,
@@ -177,8 +198,13 @@ export function ClaimForm() {
           }
         }
 
-        setUserPurchases(purchases.filter(p => p.status === "active"))
-        console.log(`Loaded ${purchases.filter(p => p.status === "active").length} active purchases`)
+        const activePurchases = purchases.filter(p => p.status === "active")
+        setUserPurchases(activePurchases)
+        console.log(`Loaded ${activePurchases.length} active purchases out of ${purchases.length} total`)
+        
+        if (activePurchases.length === 0 && purchases.length > 0) {
+          console.warn("All purchases are expired or inactive")
+        }
       } catch (error) {
         console.error("Error fetching user purchases:", error)
         toast.error("Failed to load your purchases")
