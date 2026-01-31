@@ -149,30 +149,15 @@ export function PolicyPurchase() {
           const policyData = await contractInteractions.getPolicyV2(policyId)
           console.log(`📋 Policy ${policyId} data:`, policyData)
           
-          if (policyData && (policyData.active?.value === true || policyData.active === true)) {
-            const delayThreshold = parseInt(
-              policyData["delay-threshold"]?.value?.toString() || 
-              policyData["delay-threshold"]?.toString() || 
-              "35"
-            )
-            const premiumPercentage = parseInt(
-              policyData["premium-percentage"]?.value?.toString() || 
-              policyData["premium-percentage"]?.toString() || 
-              "200"
-            )
-            const protocolFee = parseInt(
-              policyData["protocol-fee"]?.value?.toString() || 
-              policyData["protocol-fee"]?.toString() || 
-              "100"
-            )
-            const payoutPerIncident = parseInt(
-              policyData["payout-per-incident"]?.value?.toString() || 
-              policyData["payout-per-incident"]?.toString() || 
-              "500000000"
-            ) / 1000000 // Convert from microSTX to STX
+          if (policyData && policyData.active === true) {
+            // Data is now properly extracted by getPolicyV2
+            const delayThreshold = parseInt(policyData["delay-threshold"]?.toString() || "35")
+            const premiumPercentage = parseInt(policyData["premium-percentage"]?.toString() || "200")
+            const protocolFee = parseInt(policyData["protocol-fee"]?.toString() || "100")
+            const payoutPerIncident = parseInt(policyData["payout-per-incident"]?.toString() || "500000000") / 1000000 // Convert from microSTX to STX
             
-            const name = policyData.name?.value || policyData.name || policyId
-            const description = policyData.description?.value || policyData.description || "Insurance policy"
+            const name = policyData.name || policyId
+            const description = policyData.description || "Insurance policy"
             
             // Determine icon based on premium rate
             let icon = Zap

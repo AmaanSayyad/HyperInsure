@@ -388,25 +388,45 @@ export class ContractInteractions {
         return null;
       }
 
-      // Handle optional/some wrapper
+      // Handle optional/some wrapper - Stacks.js uses 'value' property
       let tupleValue = result;
-      if (result.type === 'optional' || result.type === 'some') {
+      if (result.type === 'optional' || result.type === 'some' || (result as any).value) {
         tupleValue = (result as any).value;
       }
       
-      // Now extract tuple data directly without cvToJSON
+      // Stacks.js tuple structure: tupleValue.data is a Map with field names as keys
       if (tupleValue && tupleValue.type === 'tuple' && tupleValue.data) {
         const data = tupleValue.data;
+        
+        // Helper to extract value from Clarity CV
+        const extractCV = (cv: any): any => {
+          if (!cv) return null;
+          
+          // Handle different Clarity types
+          if (cv.type === 'uint' || cv.type === 'int') {
+            return cv.value ? cv.value.toString() : '0';
+          } else if (cv.type === 'bool') {
+            return cv.value === true;
+          } else if (cv.type === 'buffer' || cv.type === 'string-ascii' || cv.type === 'string-utf8') {
+            return cv.data || cv.value || '';
+          } else if (cv.type === 'principal') {
+            return cvToString(cv);
+          }
+          
+          // Fallback
+          return cv.value !== undefined ? cv.value : cv.data !== undefined ? cv.data : cv;
+        };
+        
         return {
-          'name': data.name?.data || data.name,
-          'description': data.description?.data || data.description,
-          'delay-threshold': data['delay-threshold']?.value || data['delay-threshold'],
-          'premium-percentage': data['premium-percentage']?.value || data['premium-percentage'],
-          'protocol-fee': data['protocol-fee']?.value || data['protocol-fee'],
-          'payout-per-incident': data['payout-per-incident']?.value || data['payout-per-incident'],
-          'active': data.active?.value !== undefined ? data.active.value : data.active,
-          'created-at': data['created-at']?.value || data['created-at'],
-          'created-by': data['created-by']?.data || data['created-by'],
+          'name': extractCV(data.get('name')),
+          'description': extractCV(data.get('description')),
+          'delay-threshold': extractCV(data.get('delay-threshold')),
+          'premium-percentage': extractCV(data.get('premium-percentage')),
+          'protocol-fee': extractCV(data.get('protocol-fee')),
+          'payout-per-incident': extractCV(data.get('payout-per-incident')),
+          'active': extractCV(data.get('active')),
+          'created-at': extractCV(data.get('created-at')),
+          'created-by': extractCV(data.get('created-by')),
         };
       }
       
@@ -431,24 +451,44 @@ export class ContractInteractions {
         return null;
       }
 
-      // Handle optional/some wrapper
+      // Handle optional/some wrapper - Stacks.js uses 'value' property
       let tupleValue = result;
-      if (result.type === 'optional' || result.type === 'some') {
+      if (result.type === 'optional' || result.type === 'some' || (result as any).value) {
         tupleValue = (result as any).value;
       }
       
-      // Now extract tuple data directly without cvToJSON
+      // Stacks.js tuple structure: tupleValue.data is a Map with field names as keys
       if (tupleValue && tupleValue.type === 'tuple' && tupleValue.data) {
         const data = tupleValue.data;
+        
+        // Helper to extract value from Clarity CV
+        const extractCV = (cv: any): any => {
+          if (!cv) return null;
+          
+          // Handle different Clarity types
+          if (cv.type === 'uint' || cv.type === 'int') {
+            return cv.value ? cv.value.toString() : '0';
+          } else if (cv.type === 'bool') {
+            return cv.value === true;
+          } else if (cv.type === 'buffer' || cv.type === 'string-ascii' || cv.type === 'string-utf8') {
+            return cv.data || cv.value || '';
+          } else if (cv.type === 'principal') {
+            return cvToString(cv);
+          }
+          
+          // Fallback
+          return cv.value !== undefined ? cv.value : cv.data !== undefined ? cv.data : cv;
+        };
+        
         return {
-          'policy-id': data['policy-id']?.data || data['policy-id'],
-          'purchaser': data.purchaser?.data || data.purchaser,
-          'stx-amount': data['stx-amount']?.value || data['stx-amount'],
-          'premium-paid': data['premium-paid']?.value || data['premium-paid'],
-          'fee-paid': data['fee-paid']?.value || data['fee-paid'],
-          'active': data.active?.value !== undefined ? data.active.value : data.active,
-          'created-at': data['created-at']?.value || data['created-at'],
-          'expiry': data.expiry?.value || data.expiry,
+          'policy-id': extractCV(data.get('policy-id')),
+          'purchaser': extractCV(data.get('purchaser')),
+          'stx-amount': extractCV(data.get('stx-amount')),
+          'premium-paid': extractCV(data.get('premium-paid')),
+          'fee-paid': extractCV(data.get('fee-paid')),
+          'active': extractCV(data.get('active')),
+          'created-at': extractCV(data.get('created-at')),
+          'expiry': extractCV(data.get('expiry')),
         };
       }
       

@@ -136,13 +136,9 @@ export function ClaimForm() {
             
             console.log(`Purchase ${purchaseId} raw data:`, purchaseData)
             
-            // Extract purchaser address - handle both wrapped and unwrapped values
-            let purchaser = purchaseData.purchaser?.value || purchaseData.purchaser
-            
-            // If purchaser is still an object, try to extract the address string
-            if (typeof purchaser === 'object' && purchaser !== null) {
-              purchaser = (purchaser as any).address || String(purchaser)
-            }
+            // Extract purchaser address - now properly extracted by getPurchaseV2
+            const purchaser = purchaseData.purchaser || ''
+            const policyId = purchaseData["policy-id"] || ''
             
             // Convert both to strings for comparison
             const purchaserStr = String(purchaser).trim()
@@ -152,7 +148,6 @@ export function ClaimForm() {
             
             // Check if this purchase belongs to the current user
             if (purchaserStr === userAddressStr) {
-              const policyId = purchaseData["policy-id"]?.value || purchaseData["policy-id"] || ""
               console.log(`Fetching policy ${policyId} for purchase ${purchaseId}`)
               
               try {
@@ -163,19 +158,10 @@ export function ClaimForm() {
                 console.log(`Policy ${policyId} data:`, policyData)
                 
                 if (policyData) {
-                  const createdAt = parseInt(
-                    purchaseData["created-at"]?.value?.toString() || 
-                    purchaseData["created-at"]?.toString() || 
-                    "0"
-                  )
-                  const expiry = parseInt(
-                    purchaseData.expiry?.value?.toString() || 
-                    purchaseData.expiry?.toString() || 
-                    "0"
-                  )
-                  
-                  // Check if purchase is active in contract
-                  const isActiveInContract = purchaseData.active?.value === true || purchaseData.active === true
+                  // Data is now properly extracted by getPurchaseV2 and getPolicyV2
+                  const createdAt = parseInt(purchaseData["created-at"]?.toString() || "0")
+                  const expiry = parseInt(purchaseData.expiry?.toString() || "0")
+                  const isActiveInContract = purchaseData.active === true
                   
                   const blocksToMs = 600000
                   const purchaseDate = new Date(Date.now() - (createdAt * blocksToMs))
@@ -186,7 +172,7 @@ export function ClaimForm() {
                   
                   console.log(`Purchase ${purchaseId} details:`, {
                     policyId,
-                    policyName: policyData.name?.value || policyData.name,
+                    policyName: policyData.name,
                     isActiveInContract,
                     isExpired,
                     expiryDate: expiryDate.toISOString(),
@@ -197,22 +183,10 @@ export function ClaimForm() {
                   purchases.push({
                     purchaseId,
                     policyId,
-                    policyName: policyData.name?.value || policyData.name || policyId,
-                    delayThreshold: parseInt(
-                      policyData["delay-threshold"]?.value?.toString() || 
-                      policyData["delay-threshold"]?.toString() || 
-                      "35"
-                    ),
-                    coverageAmount: parseInt(
-                      purchaseData["stx-amount"]?.value?.toString() || 
-                      purchaseData["stx-amount"]?.toString() || 
-                      "0"
-                    ),
-                    premiumPaid: parseInt(
-                      purchaseData["premium-paid"]?.value?.toString() || 
-                      purchaseData["premium-paid"]?.toString() || 
-                      "0"
-                    ),
+                    policyName: policyData.name || policyId,
+                    delayThreshold: parseInt(policyData["delay-threshold"]?.toString() || "35"),
+                    coverageAmount: parseInt(purchaseData["stx-amount"]?.toString() || "0"),
+                    premiumPaid: parseInt(purchaseData["premium-paid"]?.toString() || "0"),
                     purchaseDate,
                     expiryDate,
                     status: isExpired ? "expired" : "active"
